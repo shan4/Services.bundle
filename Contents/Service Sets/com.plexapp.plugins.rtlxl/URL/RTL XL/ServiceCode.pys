@@ -1,6 +1,6 @@
 XL_URL = 'http://www.rtlxl.nl/#!/u/%s'
-XL_DATA_URL = 'http://www.rtl.nl/system/s4m/xldata/uuid/%s'
-FEED_URL = 'http://www.rtl.nl/system/s4m/ipadfd/d=ipad/fmt=adaptive/ak=%s/'
+XL_DATA_URL = 'http://www.rtl.nl/system/s4m/xldata/ux/%s?context=rtlxl&d=pc&ive&version=3&fmt=adaptive'
+
 THUMB_URL = 'http://data.rtl.nl/system/img//%s.jpg'
 
 RE_UUID = Regex('(?P<uuid>[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12})')
@@ -70,6 +70,7 @@ def MetadataObjectForURL(url):
 	)
 
 ####################################################################################################
+
 def MediaObjectsForURL(url):
 
 	return [
@@ -92,23 +93,19 @@ def PlayVideo(url, **kwargs):
 		raise Ex.MediaNotAvailable
 
 	data_url = XL_DATA_URL % uuid.group('uuid')
+	
+	material_node = XML.ElementFromURL(data_url, headers=HTTP_HEADERS_DESKTOP, encoding='iso-8859-1').xpath('//material[@key="%s"]' % uuid.group('uuid'))
 
-	try:
-		x = HTTP.Request(data_url, headers=HTTP_HEADERS_DESKTOP, timeout=5, follow_redirects=False).headers
-	except Ex.RedirectError, e:
-		if 'Location' in e.headers:
-			series_id = RE_SERIES_ID.search(e.headers['Location']).group('series_id')
-		else:
-			raise Ex.MediaNotAvailable
-
-	xml_url = FEED_URL % series_id
-
-	video_url = XML.ElementFromURL(xml_url, headers=HTTP_HEADERS_TABLET).xpath('//item/contentid[text()="%s"]/parent::item/movie/text()' % uuid.group('uuid'))
-	if len(video_url) < 1:
+	if len(material_node) < 1:
 		raise Ex.MediaNotAvailable
 	else:
-		try:
-			test = HTTP.Request(video_url[0], timeout=5).headers
-			return IndirectResponse(VideoClipObject, key=video_url[0])
-		except:
-			raise Ex.MediaNotAvailable
+		data = material_node[0]
+	
+	try:
+		urls = data.xpath('./playlist[@type="vod"]/sources/ref[@type="adaptive"]')[0]
+		url = urls.xpath('./@host')[0]+urls.xpath('./@href')[0]
+	
+		return IndirectResponse(VideoClipObject, key=url)
+	
+	except: 
+		raise Ex.MediaNotAvailable
