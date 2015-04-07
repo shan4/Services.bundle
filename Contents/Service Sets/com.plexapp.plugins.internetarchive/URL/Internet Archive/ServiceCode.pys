@@ -321,6 +321,7 @@ def SupportedImageFormat(file):
     if file.endswith('.jpg'): return True
     if file.endswith('.gif'): return True
     if file.endswith('.png'): return True
+    if file.endswith('.tif'): return True
     
     return False
 
