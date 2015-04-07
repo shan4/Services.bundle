@@ -1,524 +1,453 @@
-import re
-
-METADATA_BASE_URL = "http://archive.org"
-BASE_URL = "http://www.archive.org"
 INTERNET_ARCHIVE_LOGO = "http://bib.archive.org/files/2011/09/archive-logo-notext-300x300.png"
-
-####################################################################################################
-def NormalizeURL(url):
-
-    return url
 
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-    xml_url = GetMetadata(url)
-
-    if not xml_url:
-        raise Ex.MediaNotAvailable
-
-    meta_xml = XML.ElementFromURL(xml_url)
-
-    '''gather the metadata that doesn't vary between media types'''
-    rating = GetRating(url)
-    title = meta_xml.xpath('//title')[0].text
-
-    creator = meta_xml.xpath('//creator')
-    artist = creator[0].text if len(creator) > 0 else None
-
-    ''' Album > Track '''
-    if '#Track' in url:
-
-        (url, query) = url.split('?')
-        files = String.ParseQueryString(query)
-        files_xml = XML.ElementFromURL(FileListURL(url))
-
-        try:
-            track_title = files_xml.xpath('//file[@name="%s"]/title/text()' % files['file'][0])[0]
-        except:
-            # Some derivatives are missing the <title> attribute. If this is the case, we try to find the
-            # track title by looking for the same track, but in a different format.
-            track_title = files_xml.xpath('//file[contains(@name, "%s")]/title/text()' % files['file'][0].rsplit('.', 1)[0])[0]
-
-        try:
-            duration = files_xml.xpath('//file[@name="%s"]/length/text()' % files['file'][0])[0]
-            if not ':' in duration:
-                duration = int(float(duration)*1000)
-            else:
-                duration = Datetime.MillisecondsFromString(duration)
-        except:
-            duration = None
-
-        return TrackObject(
-            title = track_title,
-            artist = artist,
-            album = title,
-            duration = duration,
-            thumb = Callback(Thumb, url=url)
-        )
-
-    summary = None
-    for summary_node in ['//description', '//notes']:
-        try:
-            summary = meta_xml.xpath(summary_node)[0].text
-            break
-        except: pass
-
-    '''gather the media-type specific metadata and return the appropriate object'''
-    if meta_xml.xpath('//mediatype')[0].text in ['audio', 'etree']:
-        return AlbumObject(
-            key = Callback(GetTracks, url=url),
-            title = title,
-            summary = summary,
-            artist = artist,
-            originally_available_at = Datetime.ParseDate(meta_xml.xpath('//publicdate')[0].text).date(),
-            rating = rating,
-            thumb = Callback(Thumb, url=url)
-        )
-    elif meta_xml.xpath('//mediatype')[0].text == 'movies':
-        '''year is about the only useful date info (usually available) that applies to the actual release of the video
-        as opposed to the upload date'''
-        year = meta_xml.xpath('.//year/text()')
-        if len(year) > 0:
-            year = int(year[0])
-        else:
-            year = None
-
-        runtime = meta_xml.xpath('//runtime/text()')
-        if len(runtime) > 0:
-            try:
-                duration = (int(re.search('([0-9]+) minutes ', runtime).group(1))*60 + int(re.search('([0-9]+) seconds', runtime[0]).group(1)))*1000
-            except:
-                duration = None
-        else:
-            duration = None
-
-        return VideoClipObject(
-            url = '%s#video' % (url),
-            title = title,
-            summary = summary,
-            year = year,
-            rating = rating,
-            duration = duration,
-            thumb = Callback(Thumb, url=url)
-        )
-    else:
-        '''if it's not audio or video, I have no idea what it is or how to handle it (yet)'''
-        raise Ex.MediaNotAvailable
-
-####################################################################################################
-def Thumb(url=None):
-
-  if not url:
-    return None
-
-  if url[-4:] == ".jpg":
-    thumb_url = url
-  else:
+    json_url = url
+    if "#" in url:
+        json_url = url.split("#")[0]
+    
+    json_data = GetJSONData(json_url)
+    
+    title = json_data['metadata']['title'][0].strip("[").strip("]")
+    show = None
     try:
-      page = HTML.ElementFromURL(url)
-
-      try:
-        thumb_url = METADATA_BASE_URL + page.xpath('.//table[@class="fileFormats"]//a[contains(@href, ".jpg")]')
-      except:
-        try:
-          thumb_url = page.xpath('//img[@title="[item image]"]')[0].get('src')
-          if thumb_url[-4:] != ".jpg":
-            raise ThumbError('Not a jpg')
-          else:
-            pass
-        except:
-          try:
-            '''grab the list of files to find an appropriate thumbnail'''
-            files = XML.ElementFromURL(FileListURL(url))
-            '''take the first available jpeg thumbnail'''
-            thumb_url = DownloadURL(url) + files.xpath('//file[contains(@name, ".jpg")]')[0].get('name')
-          except:
-            thumb_url = INTERNET_ARCHIVE_LOGO
+        if ": " in title:
+            show = title.split(": ")[0].strip()
+            title = ': '.join(title.split(": ")[1:]).strip()
+        elif ", " in title:
+            title = ', '.join(title.split(", ")[1:]).strip()
+        elif "- " in title:
+            show = title.split("- ")[0].strip()
+            title = '- '.join(title.split("- ")[1:]).strip()
     except:
-      thumb_url = INTERNET_ARCHIVE_LOGO
+        pass
+        
+    if not show:
+        try:
+            show = json_data['misc']['collection-title']
+        except: 
+            pass
+    
+    summary = None        
+    if 'description' in json_data['metadata']:
+        summary = String.StripTags(json_data['metadata']['description'][0])
+    
+    thumb = None
+    for file in json_data['files']:
+        if SupportedImageFormat(file):
+            thumb = 'https://archive.org/download/' + json_data['metadata']['identifier'][0] + file
+   
+    if not thumb:
+        thumb = json_data['misc']['image'] if 'image' in json_data['misc'] else INTERNET_ARCHIVE_LOGO
+    
+    date_string = ''
 
-  data = HTTP.Request(thumb_url, cacheTime=CACHE_1DAY).content
-  return DataObject(data, 'image/jpeg')
+    if 'year' in json_data['metadata']:
+        date_string = json_data['metadata']['year'][0]
 
+    elif 'publicdate' in json_data['metadata']:
+        date_string = json_data['metadata']['publicdate'][0]
+
+    elif 'addeddate' in json_data['metadata']:
+        date_string = json_data['metadata']['addeddate'][0]
+ 
+    originally_available_at = None
+    if date_string:
+        originally_available_at = Datetime.ParseDate(date_string).date()
+    
+    rating = None 
+    if 'reviews' in json_data:
+        rating = 2 * float(json_data['reviews']['info']['avg_rating'])
+        
+    directors = None
+    if 'director' in json_data:
+        directors = json_data['director']
+    
+    duration = None
+    if 'runtime' in json_data:
+        runtime = json_data['runtime'][0]
+        
+        if not ':' in runtime:
+            duration = int(float(runtime) * 1000)
+        else:
+            duration = Datetime.MillisecondsFromString(runtime)    
+    
+    artist = None
+    if 'creator' in json_data:
+        artist = json_data['creator'][0]
+    
+    media_type = DetermineMediaType(json_data)
+    
+    if "#" in url:
+        track = GetTracks(url=url.split("#")[0], thumb=thumb, id=url.split("#")[1])
+        
+        return TrackObject(
+            title = track['title'],
+            album = track['album'],
+            artist = track['artist'],
+            index = track['index'],
+            duration = track['duration'],
+            thumb = track['thumb']
+        )
+        
+    elif media_type == 'movies':
+        return EpisodeObject(
+            title = title,
+            show = show,
+            summary = summary,
+            thumb = thumb,
+            originally_available_at = originally_available_at,
+            source_icon = INTERNET_ARCHIVE_LOGO,
+            duration = duration,
+            rating = rating,
+            directors = [directors]
+        )
+
+    elif media_type == 'audio':            
+        return Album(
+            key = Callback(GetTracks, url=url, thumb=thumb),
+            title = title,
+            summary = summary,
+            thumb = thumb,
+            originally_available_at = originally_available_at
+        )
+        
+    elif media_type == 'image':  
+        return PhotoAlbumObject(
+            key = Callback(GetPhotos, url=url),
+            title = title,
+            summary = summary,
+            thumb = thumb,
+            originally_available_at = originally_available_at
+        )
+    
+    else:
+        raise Ex.MediaNotAvailable
+ 
 ####################################################################################################
+@deferred
 def MediaObjectsForURL(url):
 
-    if '#Track' in url:
-        '''if the url has a "#Track" tag added, we know that we need to return MediaObjects
-        for the given TrackObject'''
-        return MediaObjectsForTrack(url) 
-    elif '#video' in url:
-        url = url.replace("#video", "")
-        return VideoObjectsForURL(url)
-    else: ### THIS IS NOT SOMETHING TO COPY AND PASTE TO OTHER SERVICES WITHOUT SERIOUS THOUGHT ###
-        '''We don't know in advance whether it should be audio or video. The channel(s) should tell
-        us which it should be, therefore this must come from the bookmarklet and we can get away with
-        making an http request to find out.'''
-        page = HTML.ElementFromURL(url)
-        media_type = page.xpath('.//div[@class="breadcrumbs"]/a')[0].get('href').split('/')[-1]
-        if media_type == 'movies':
-            return VideoObjectsForURL(url)
-        elif media_type == 'audio':
-            '''return MediaObjects for the given Album, where each part is a track'''
-            Log('ERROR - This URL is an audio page which should have been caught and broken into tracks. ')
-    return
+    track_id = None
+    if "#" in url:
+        track_id = url.split("#")[1]
+        url = url.split("#")[0]
+    
+    json_data = GetJSONData(url)  
+    media_type = DetermineMediaType(json_data)
+    
+    if media_type == 'image':
+        return [
+            MediaObject(
+                parts = Callback(GetPhotos, url=url)
+            )
+        ]    
 
-####################################################################################################
-def GetMetadata(url):
+    media_objects = []
+    segments = GetSegments(json_data)
 
-    try:
-        page = HTML.ElementFromURL(url)
-    except:
-        return None
-
-    xml_url = None
-    size = 0
-
-    for meta in page.xpath('//table[contains(@class, "fileFormats")]//a[contains(@href, "_meta.xml")]'):
-        file_size = ConvertToBytes(meta.xpath('./text()')[0])
-
-        if file_size > size:
-            xml_url = METADATA_BASE_URL + meta.get('href')
-            size = file_size
-
-    return xml_url
-
-####################################################################################################
-def ConvertToBytes(size_string):
-
-    ''' crude converter for file sizes '''
-    size_string = size_string.replace(',', '').strip()
-    if " KB" in size_string:
-        return float(size_string.split(' ')[0])*1000
-    elif " B" in size_string:
-        return float(size_string.split(' ')[0])
-    else: #just in case
-        return float(size_string.split(' ')[0])
-
-####################################################################################################    
-def GetTracks(url):
-
-    oc = ObjectContainer()
-
-    count = 0
-    files = XML.ElementFromURL(FileListURL(url))
-    tracks = {}
-
-    for file in files.xpath('//file'):
-        try:
-            format = file.xpath('./format')[0].text.lower()
-        except:
+    for id in segments:
+        parts = []      
+        segments[id]['parts'] = sorted(segments[id]['parts'], key = lambda part: part['media_url'])
+        
+        if track_id and not track_id in segments[id]['parts'][0]['media_url']:
             continue
 
-        format_is_mp3 = format.endswith(' mp3')
-        format_is_ogg = format == 'ogg vorbis'
-        format_is_flac = format == 'flac'
-
-        if format_is_mp3 or format_is_ogg or format_is_flac:
-            try:
-                file_name = file.get('name')
-
-                source = file.get('source').lower()
-
-                if source == 'original':
-                    track_id = file_name
-                else:
-                    track_id = file.xpath('./original')[0].text
-
-            except:
-                continue
-
-            if not track_id in tracks:
-                tracks[track_id] = {'files': []}
-                count = count + 1
-
-            tracks[track_id]['files'].append(file_name)
-
-            try:
-                index = int(file.xpath('./track')[0].text)
-                tracks[track_id]['index'] = index
-            except:
-                if not 'index' in tracks[track_id]:
-                    try:
-                        '''parse the original filename to get the track number'''
-                        original = str(file.xpath('./original')[0].text).rsplit('.', 1)[0]
-                        tracks[track_id]['index'] = int(original[-2:])                  
-                    except:
-                        '''try to grab a track number from the beginning of the title, so that we can keep the tracks in order'''
-                        try:
-                            count = int(re.search("^([0-9]+)", file.xpath('./title')[0].text).group(1))
-                            tracks[track_id]['index'] = count
-                        except:
-                            pass
-
-            try:
-                title = file.xpath('./title')[0].text
-                tracks[track_id]['title'] = title
-            except:
-                if not 'title' in tracks[track_id]:
-                    '''if the "title" is not specified, use the filename instead'''
-                    title = file_name
-                    '''remove the extension'''
-                    tracks[track_id]['title'] = title[:title.find('.')]
-
-            if not 'album' in tracks[track_id]:
-                try:
-                    tracks[track_id]['album'] = file.xpath('./album')[0].text
-                except:
-                    pass
-
-            if not 'artist' in tracks[track_id]:
-                try:
-                    tracks[track_id]['artist'] = file.xpath('./creator')[0].text
-                except:
-                    pass
-
-            if not 'duration' in tracks[track_id]:
-                try: 
-                    length = file.xpath('./length')[0].text
-
-                    if ':' in length:
-                        '''format is mm:ss'''
-                        tracks[track_id]['duration'] = (int(length.split(':')[0])*60 + int(length.split(':')[1]))*1000
-                    else:
-                        '''format is float(s)'''
-                        tracks[track_id]['duration'] = int(float(length)*1000) 
-                except:
-                    pass
-
-
-    sort_by_title = False
-
-    for track_id in tracks:
-        query = ''
-        for file in tracks[track_id]['files']:
-            if not query:
-                query = '?'
-            else:
-                query = query + '&'
-
-            query = query + "file=" + file 
-
-        track_url = url + query + '#Track'
-
-        title = tracks[track_id]['title']
-
-        album = None
-        if 'album' in tracks[track_id]:
-           album = tracks[track_id]['album']
-
-        artist = None
-        if 'artist' in tracks[track_id]:
-            artist = tracks[track_id]['artist']
-
-        duration = None
-        if 'duration' in tracks[track_id]:
-            duration = tracks[track_id]['duration']
-
-        index = None
-        if 'index' in tracks[track_id]:
-            index = tracks[track_id]['index']
-        else:
-            sort_by_title = True
-
-        oc.add(TrackObject(
-            url = track_url,
-            title = title,
-            album = album,
-            artist = artist,
-            index = index,
-            duration = duration,
-            thumb = Callback(Thumb, url = url)
-        ))
-
-
-    if sort_by_title:
-        ''' If some track lacks track number, sort by title instead '''
-        oc.objects.sort(key = lambda obj: obj.title)
-    else:
-        ''' Sort by track number '''
-        oc.objects.sort(key = lambda obj: obj.index)
-
-    '''It's possible that the track list simply contains types which we don't support (e.g. Shorten)'''
-    if len(oc) < 1:
-        return ObjectContainer(
-            header = "No Tracks Found", 
-            message = "No tracks with supported filetypes were found"
-        )
-
-    return oc
-
-####################################################################################################
-def MediaObjectsForTrack(url):
-
-    url = url[:url.find("#")]
-    [url, query] = url.split("?")
-
-    files = String.ParseQueryString(query)
-
-    flac_file = None
-    ogg_file = None
-    mp3_file = None
-
-    for file in files['file']:
-        if file.endswith('flac'):
-            flac_file = file
-        elif file.endswith('ogg'):
-            ogg_file = file
-        elif file.endswith('mp3'):
-            # The first one has the highest bitrate
-            if not mp3_file:
-                mp3_file = file
-
-    media_objects = []
-
-    if mp3_file:
-        media_objects.append(
-            MediaObject(
-                parts = [
-                    PartObject(
-                        key = Callback(PlayAudio, url=url, file=mp3_file, ext='mp3')
-                    )
-                ],
-                bitrate = 192,
-                container = Container.MP3,
-                audio_codec = AudioCodec.MP3,
-                audio_channels = 2
+        for part in segments[id]['parts']:
+            parts.append(
+                PartObject(
+                    key = part['media_url'],
+                    duration = part['duration'] if 'duration' in part else None
+                )
             )
-        )
-
-    if flac_file:        
+        
         media_objects.append(
             MediaObject(
-                parts = [
-                    PartObject(
-                        key = Callback(PlayAudio, url=url, file=flac_file, ext='flac')
-                    )
-                ],
-                bitrate = 256,
-                container = Container.FLAC,
-                audio_codec = AudioCodec.FLAC,
-                audio_channels = 2
-            )
-        )
-
-    if ogg_file:
-        media_objects.append(
-            MediaObject(
-                parts = [
-                    PartObject(
-                        key = Callback(PlayAudio, url=url, file=ogg_file, ext='ogg')
-                    )
-                ],
-                bitrate = 128,
-                container = Container.OGG,
-                audio_codec = AudioCodec.VORBIS,
-                audio_channels = 2
-            )
-        )
-
-    return media_objects
-
-####################################################################################################
-def PlayAudio(url, file):    
-
-    media_url = DownloadURL(url) + file
-    return Redirect(media_url)
-
-####################################################################################################
-def FileListURL(url):
-
-    try:
-        page = HTML.ElementFromURL(url)
-    except:
-        raise Ex.MediaNotAvailable
-
-    '''It's possible that there are more than one file list available. However, we want to ensure 
-       that in this case, we return at least one which is valid. We've found that some albums have
-       broken URL links associated with them. Therefore we should at least try and validate first.'''
-    track_list_urls = page.xpath('.//table[contains(@class, "fileFormats")]//a[contains(@href, "_files.xml")]')
-
-    for file_url in track_list_urls:
-        try:
-            track_list_url = BASE_URL + file_url.get('href')
-            HTTP.Request(track_list_url).headers
-            return track_list_url
-        except: pass
-
-    return None
-
-####################################################################################################
-def GetRating(url):
-
-    try:
-        page = HTML.ElementFromURL(url)
-        reviews_url = page.xpath('.//table[@class="fileFormats"]/a[contains(@href, "_reviews.xml")]')[0]
-        reviews = XML.ElementFromURL(reviews_url)
-        '''Get the Average Rating and multiply it by 2 to change it to Out-Of-10 rather than Out-Of-5'''
-        rating = float(reviews.xpath('//info/avg_rating')[0])*2
-        return rating
-    except:
-        return None
-
-####################################################################################################
-def DownloadURL(url):
-
-    download_url = url.replace('/details/', '/download/') + '/'
-    return download_url
-
-####################################################################################################
-def VideoObjectsForURL(url):
-
-    media_objects = []
-
-    for resolution in ['720', '480', '360', '240']:
-        media_objects.append(
-            MediaObject(
-                container = Container.MP4,
-                video_codec = VideoCodec.H264,
-                audio_codec = AudioCodec.AAC,
+                container = segments[id]['container'] if 'container' in segments[id] else None,
+                video_codec = segments[id]['video_codec'] if 'video_codec' in segments[id] else None,
+                video_resolution = segments[id]['video_resolution'] if 'video_resolution' in segments[id] else None,
+                aspect_ratio = segments[id]['aspect_ratio'] if 'aspect_ratio' in segments[id] else None,
+                audio_codec = segments[id]['audio_codec'] if 'audio_codec' in segments[id] else None,
                 audio_channels = 2,
                 optimized_for_streaming = True,
-                video_resolution = int(resolution),
-                parts = [
-                    PartObject(
-                        key = Callback(PlayVideo, url=url, resolution=resolution)
-                    )
-                ]
+                parts = parts
             )
         )
 
-    return media_objects
+    if media_type == 'movies':
+        # Highest resolution first
+        sorted_media_objects = sorted(media_objects, key = lambda media_object: media_object.video_resolution, reverse = True)
+    
+    elif media_type == 'audio':
+        # This will prioritize: 1. FLAC, 2. MP3, 3. OGG
+        sorted_media_objects = sorted(media_objects, key = lambda media_object: media_object.container)
 
-####################################################################################################
-def PlayVideo(url, resolution='720', **kwargs):
+    return sorted_media_objects 
 
-    resolution = int(resolution)
+####################################################################################################         
+def GetTracks(url, thumb, id = None):
+    oc = ObjectContainer()
+    
+    page_element = HTML.ElementFromURL(url, cacheTime=CACHE_1MONTH)
+    json_data = GetJSONData(url)
+    
+    for item in page_element.xpath("//script[@type='text/javascript']/text()"):
+        if "Play('jw6'" in item:
+            playlist = Regex("({.+})").findall(item)
+            
+            for track_string in playlist:
+                track = JSON.ObjectFromString(track_string)
 
-    xml_url = FileListURL(url)
-    files = XML.ElementFromURL(xml_url)
+                if not 'sources' in track:
+                    continue
 
-    min_diff_found = 1000000 # Some huge number to get it started
+                track_id = track['sources'][0]['file'].rsplit("/", 1)[1].split(".")[0]
+                
+                if id and not id in track_id:
+                    continue
+                
+                track_title = track['title']
+                
+                # Find the album and artist from the JSON data
+                track_album = None
+                track_artist = None
+                for file in json_data['files']:
+                    if track_id in file:
+                        if 'album' in json_data['files'][file]:
+                            if not track_album:
+                                track_album = json_data['files'][file]['album']
+                        
+                            if track_artist:
+                                break
+                                
+                        elif 'creator' in json_data['files'][file]:
+                            if not track_artist:
+                                track_artist = json_data['files'][file]['creator']
+                            
+                            if track_album:
+                                break
+                
+                track_no = int(track_title.split(".")[0])
+                
+                track_duration = None
+                if 'duration' in track:
+                    track_duration = int(float(track['duration']) * 1000)
+                
+                track_thumb = thumb
+                if 'image' in track:
+                    track_thumb = 'https://archive.org' + track['image']
+                
+                if id:
+                    return {
+                        'title': track_title,
+                        'album': track_album,
+                        'artist': track_artist,
+                        'index': track_no,
+                        'duration': track_duration,
+                        'thumb': track_thumb    
+                    }
+                else:
+                    oc.add(
+                        TrackObject(
+                            url = url + "#" + track_id,
+                            title = track_title,
+                            album = track_album,
+                            artist = track_artist,
+                            index = track_no,
+                            duration = track_duration,
+                            thumb = track_thumb  
+                        )
+                    )
+                
+    return oc
 
-    for file in files.xpath("//file"):
-        name = file.xpath("./@name")[0]
+####################################################################################################         
+def GetPhotos(url):
+    
+    oc = ObjectContainer()
+    
+    json_data = GetJSONData(url)
+    
+    for file in json_data['files']:
+        if SupportedImageFormat(file) and json_data['files'][file]['source'] == 'original':
+            img = 'https://archive.org/download/' + json_data['metadata']['identifier'][0] + file
+            
+            originally_available_at = None
+            for id in ['date', 'year', 'publicdate', 'addeddate']:
+                try:
+                    originally_available_at = Datetime.ParseDate(json_data['metadata'][id]).date()
+                    break
+                except:
+                    pass
+                
+            summary = ''
+            
+            for item in json_data['metadata']:
+                item_text = ''
+            
+                for text in json_data['metadata'][item]:
+                    if text:
+                        item_text = item_text + text + ', '
+            
+                if item_text:
+                    item_text = item_text.strip()
+                    item_text = item_text[:-1]
+                    
+                    summary = summary + item.title().replace("_", " ") + ': \r\n- ' + item_text + '\r\n\r\n'
+            
+            oc.add(
+                PhotoObject(
+                    key = img,
+                    rating_key = img,
+                    thumb = img,
+                    title = json_data['metadata']['title'][0].strip(),
+                    summary = String.StripTags(summary),
+                    originally_available_at = originally_available_at
+                    
+                )
+            )
+    
+    return oc
 
-        if name.lower().endswith('.mp4'):
-            try:
-                diff = abs(resolution - int(file.xpath(".//height/text()")[0]))
-            except:
-                # No width or height could be found
-                # That usually means that there is only one
-                # MP4 variant
-                # We'll use this one by force
-                file_name = name
-                break
+####################################################################################################         
+def SupportedImageFormat(file):
+    file = file.lower()
+    
+    if file.endswith('.jpg'): return True
+    if file.endswith('.gif'): return True
+    if file.endswith('.png'): return True
+    
+    return False
 
-            if diff < min_diff_found:
-                file_name = name
-                min_diff_found = diff
+####################################################################################################         
+def SupportedAudioFormat(file):
+    file = file.lower()
+    
+    if file.endswith('.mp3'): return True
+    if file.endswith('.flac'): return True
+    if file.endswith('.ogg'): return True
+    
+    return False
 
-    media_url = xml_url[:xml_url.rfind("/") + 1] + file_name
+####################################################################################################         
+def GetJSONData(url):
 
-    return Redirect(media_url)
+    if not '?' in url:
+        json_url = url + '?output=json'
+    else:
+        json_url = url + '&output=json'
+
+    json_data = JSON.ObjectFromURL(json_url, cacheTime=CACHE_1MONTH)
+    
+    return json_data
+
+####################################################################################################         
+def DetermineMediaType(json_data):
+
+    if 'movies' in json_data['metadata']['mediatype'][0].lower():
+        return 'movies'
+
+    elif json_data['metadata']['mediatype'][0].lower() in ['audio', 'etree']:
+        return 'audio'
+
+    elif 'image' in json_data['metadata']['mediatype'][0].lower():
+        return 'image'
+        
+    else:
+        return ''        
+
+####################################################################################################     
+def GetSegments(json_data):
+
+    media_type = DetermineMediaType(json_data)
+
+    segments = {}
+    for file in json_data['files']:
+        container = None
+        
+        if file.endswith('.mp4'):
+            container = Container.MP4
+            video_codec = VideoCodec.H264
+            audio_codec = AudioCodec.AAC
+            
+        elif file.endswith('.avi'):
+            container = Container.AVI
+            video_codec = 'mpeg4'
+            audio_codec = AudioCodec.MP3
+            
+        elif file.endswith('.ogv'):
+            container = Container.OGG
+            video_codec = VideoCodec.THEORA
+            audio_codec = AudioCodec.VORBIS
+
+        elif file.endswith('.wmv'):
+            container = 'wmv'
+            video_codec = 'wmv3'
+            audio_codec = 'wmvav2'
+            
+        elif file.endswith('.mkv'):
+            container = Container.MKV
+            video_codec = VideoCodec.H264
+            audio_codec = AudioCodec.AAC
+
+        elif file.endswith('.mp3'):
+            container = Container.MP3
+            video_codec = None
+            audio_codec = AudioCodec.MP3
+
+        elif file.endswith('.flac'):
+            container = Container.FLAC
+            video_codec = None
+            audio_codec = AudioCodec.FLAC
+            
+        elif file.endswith('.ogg'):
+            container = Container.OGG
+            video_codec = None
+            audio_codec = AudioCodec.VORBIS
+        
+        if not container:
+            continue
+        
+        if file.startswith('/'):
+            string_to_append = file
+        else:
+            string_to_append = '/' + file
+
+        media_url = 'https://archive.org/download/' + json_data['metadata']['identifier'][0] + String.Quote(string_to_append)
+        is_divided_into_parts = '_part' in media_url or '_ending' in media_url
+        
+        if media_type == 'movies' and is_divided_into_parts:
+            id = media_url.split("_part")[0]
+            id = id.split("_ending")[0]
+            id = id + '.' + container
+
+        else:
+            id = media_url
+        
+        if not id in segments:
+            segments[id] = {}
+            segments[id]['parts'] = []
+            segments[id]['container'] = container
+            segments[id]['audio_codec'] = audio_codec
+            
+            if media_type == 'movies':
+                segments[id]['video_codec'] = video_codec
+                segments[id]['video_resolution'] = int(json_data['files'][file]['height']) if 'height' in json_data['files'][file] else None
+                
+                if 'height' in json_data['files'][file] and 'width' in json_data['files'][file]:
+                    if int(json_data['files'][file]['height']) > 0:
+                        segments[id]['aspect_ratio'] = int(float(int(json_data['files'][file]['width']) / int(json_data['files'][file]['height'])))
+
+        if 'length' in json_data['files'][file]:
+            length = json_data['files'][file]['length']
+            if not ':' in length:
+                duration = int(float(length) * 1000)
+            else:
+                duration = Datetime.MillisecondsFromString(length)
+        else:
+            duration = None
+            
+        segments[id]['parts'].append({'media_url': media_url, 'duration': duration}) 
+        
+    return segments
