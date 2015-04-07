@@ -192,6 +192,7 @@ def GetTracks(url, thumb, id = None):
     page_element = HTML.ElementFromURL(url, cacheTime=CACHE_1MONTH)
     json_data = GetJSONData(url)
     
+    track_no = 1
     for item in page_element.xpath("//script[@type='text/javascript']/text()"):
         if "Play('jw6'" in item:
             playlist = Regex("({.+})").findall(item)
@@ -228,7 +229,10 @@ def GetTracks(url, thumb, id = None):
                             if track_album:
                                 break
                 
-                track_no = int(track_title.split(".")[0])
+                try:
+                    track_no = int(track_title.split(".")[0])
+                except:
+                    track_no = track_no + 1
                 
                 track_duration = None
                 if 'duration' in track:
