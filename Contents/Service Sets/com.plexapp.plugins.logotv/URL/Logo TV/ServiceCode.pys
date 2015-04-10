@@ -3,6 +3,7 @@ MRSS_URL = "http://www.logotv.com/player/includes/rss.jhtml?uri=%s"
 
 URI_FORMAT = 'mgid:uma:%s:mtv.com:%s'
 RE_URI = Regex('MTVN.Player.(?:episode|video)Uri = \"(.+?)\"')
+RE_URI2 = Regex("MTVN.VIDEO.contentUri = \'(.+?)\';")
 RE_PLAYLIST = Regex('MTVN.Player.defaultPlaylistId = (\d{7})')
 
 RE_RES_BIT = Regex('x(\d+)_(\d+)_?[^._]*\.(mp4|flv)')
@@ -120,8 +121,11 @@ def GetRSS(url):
     else:
         # Pull the uri from the web page
         content = HTTP.Request(url).content
-        try: uri = RE_URI.search(content).group(1)
-        except: raise Ex.MediaNotAvailable
+        try:
+            uri = RE_URI.search(content).group(1)
+        except:
+            try: uri = RE_URI2.search(content).group(1)
+            except: raise Ex.MediaNotAvailable
 
     xml = XML.ElementFromURL(MRSS_URL % uri)
 

@@ -11,6 +11,7 @@
 				<string>^http://www.logotv.com/video/.+/\d{7}/playlist.jhtml</string>
 				<string>^http://www.logotv.com/video/misc/\d{6,7}/.+</string>
 				<string>^http://www.logotv.com/video/\?id=\d{6,7}</string>
+				<string>^http:\/\/www\.logotv\.com\/shows\/.+\/\d{6,7}\/(playlist|video)\/(#id=\d{7})?</string>
 			</array>
 		</dict>
 	</dict>
