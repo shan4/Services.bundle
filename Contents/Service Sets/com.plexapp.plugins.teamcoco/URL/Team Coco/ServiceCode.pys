@@ -1,6 +1,7 @@
 EPISODE_DATA = 'http://teamcoco.com/cvp/2.0/%s.xml'
 RE_BANDWIDTH = Regex('BANDWIDTH=(\d+)')
-RE_JSON = Regex('var player.+"preload":"([^"]+)"')
+RE_JSON = Regex('(?:player\.init\("|call\(player,"|this\.push\(")([^"]+)')
+RE_JSON_ALT = Regex('(?:player\.init\(\["|call\(player,\[")([^\]]+)')
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -171,10 +172,15 @@ def GetVideoId(url):
 def GetVideoJson(url):
 
 	data = HTTP.Request(url, cacheTime=CACHE_1HOUR).content
-	json = RE_JSON.search(data)
+	json = RE_JSON.findall(data)
 
-	if not json:
-		raise Ex.MediaNotAvailable
+	if len(json) < 1:
+		json = RE_JSON_ALT.findall(data)
 
-	json_obj = JSON.ObjectFromString(String.Base64Decode(json.group(1)))
+		if len(json) < 1:
+			raise Ex.MediaNotAvailable
+
+	json = ''.join(json)
+
+	json_obj = JSON.ObjectFromString(String.Base64Decode(json))
 	return json_obj
