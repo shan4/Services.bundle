@@ -1,43 +1,31 @@
-EPISODE_DATA = 'http://teamcoco.com/cvp/2.0/%s.xml'
+VIDEO_INFO = 'http://teamcoco.com/api/5/apps/cvp/%s.xml'
 RE_BANDWIDTH = Regex('BANDWIDTH=(\d+)')
-RE_JSON = Regex('(?:player\.init\("|call\(player,"|this\.push\(")([^"]+)')
-RE_JSON_ALT = Regex('(?:player\.init\(\["|call\(player,\[")([^\]]+)')
-
-####################################################################################################
-def NormalizeURL(url):
-
-	return url.split('?')[0]
+FULL_EP_RES = [480]
+VIDEO_RES = [1080, 720, 480]
 
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	if '/full-episode-' in url:
+	video_id = GetVideoId(url)
 
-		video_id = GetVideoId(url)
-		xml = XML.ElementFromURL(EPISODE_DATA % (video_id), cacheTime=CACHE_1HOUR)
+	if not video_id:
+		Log.Exception("Could not retrieve video_id in MetadataObjectForURL")
+		raise Ex.MediaNotAvailable
 
-		title = xml.xpath('//headline/text()')[0]
-		summary = String.StripTags(xml.xpath('//description/text()')[0]).strip()
+	xml = XML.ElementFromURL(VIDEO_INFO % (video_id), cacheTime=CACHE_1HOUR)
+	title = xml.xpath('//headline/text()')[0]
+	summary = String.StripTags(xml.xpath('//description/text()')[0]).strip()
 
-		duration = xml.xpath('//video/@duration')
-		duration = Datetime.MillisecondsFromString(duration[0]) if len(duration) > 0 and duration[0] != "" else None
+	duration = xml.xpath('//video/@duration')
+	duration = Datetime.MillisecondsFromString(duration[0]) if len(duration) > 0 and duration[0] != "" else None
 
+	try:
+		thumb = xml.xpath('//image[@width="640"]/text()')[0]
+	except:
 		try:
-			thumb = xml.xpath('//image[@width="640"]/text()')[0]
+			thumb = xml.xpath('//image/text()')[-1]
 		except:
-			try:
-				thumb = xml.xpath('//image/text()')[-1]
-			except:
-				thumb = ''
-
-	else:
-
-		json_obj = GetVideoJson(url)
-
-		title = json_obj['title']
-		summary = json_obj['teaser']
-		duration = json_obj['duration'] * 1000
-		thumb = json_obj['thumb']['href']
+			thumb = ''
 
 	return VideoClipObject(
 		title = String.DecodeHTMLEntities(title),
@@ -54,12 +42,12 @@ def MediaObjectsForURL(url):
 		return [
 			MediaObject(
 				parts = [
-					PartObject(key=HTTPLiveStreamURL(Callback(PlayEpisode, url=url)))
+					PartObject(key=HTTPLiveStreamURL(Callback(PlayEpisode, url=url, res=res)))
 				],
-				video_resolution = 360,
+				video_resolution = res,
 				audio_channels = 2,
 				optimized_for_streaming = True
-			)
+			) for res in FULL_EP_RES
 		]
 
 	else:
@@ -75,14 +63,22 @@ def MediaObjectsForURL(url):
 				audio_codec = AudioCodec.AAC,
 				audio_channels = 2,
 				optimized_for_streaming = True
-			) for res in [1080, 720, 480]
+			) for res in VIDEO_RES
 		]
 
 ####################################################################################################
-def PlayEpisode(url, **kwargs):
+def PlayEpisode(url, res):
+
+	if not '/full-episode-' in url:
+		raise Ex.MediaNotAvailable
 
 	video_id = GetVideoId(url)
-	xml = XML.ElementFromURL(EPISODE_DATA % (video_id), cacheTime=CACHE_1HOUR)
+
+	if not video_id:
+		Log.Exception("Could not retrieve video_id in PlayEpisode")
+		raise Ex.MediaExpired
+
+	xml = XML.ElementFromURL(VIDEO_INFO % (video_id), cacheTime=CACHE_1HOUR)
 
 	if len(xml.xpath('//files/file')) < 1:
 		raise Ex.MediaNotAvailable
@@ -93,15 +89,15 @@ def PlayEpisode(url, **kwargs):
 
 	try:
 		playlist = HTTP.Request(m3u8_url).content
-	except:
-		raise Ex.MediaNotAvailable
+	except Ex.HTTPError, e:
+		if e.code == 404:
+			raise Ex.MediaNotAvailable
 
 	new_playlist = '#EXTM3U'
 	streams = []
 	bandwidth = None
 
 	for line in playlist.splitlines(False)[1:]:
-
 		if line.startswith('#'):
 			bandwidth = RE_BANDWIDTH.search(line)
 			previous_line = line
@@ -129,30 +125,29 @@ def PlayEpisode(url, **kwargs):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res=1080):
+def PlayVideo(url, res=720):
 
-	res = 720 if res not in [1080, 720, 480] else res
+	video_id = GetVideoId(url)
 
-	json_obj = GetVideoJson(url)
-	uhd_url = None
-	hd_url = None
-	sd_url = None
+	if not video_id:
+		Log.Exception("Could not retrieve video_id in PlayVideo")
+		raise Ex.MediaExpired
 
-	for video in json_obj['files']:
+	xml = XML.ElementFromURL(VIDEO_INFO % (video_id), cacheTime=CACHE_1HOUR)
 
-		if video['type'] == 'uhd' or video['bitrate'] == 'hd':
-			uhd_url = video['url']
-		if video['type'] == 'hd':
-			hd_url = video['url']
-		if video['type'] == 'sd' or video['bitrate'] == 'embed':
-			sd_url = video['url']
+	if len(xml.xpath('//files/file')) < 1:
+		raise Ex.MediaNotAvailable
 
-	if res == 1080 and uhd_url:
-		video_url = uhd_url
-	elif res in [1080, 720] and hd_url:
-		video_url = hd_url
-	elif sd_url:
-		video_url = sd_url
+	hd_1080 = video_url = xml.xpath('//file[@bitrate="other" and contains(., "1080")]/text()')
+	hd_720 = video_url = xml.xpath('//file[@bitrate="hd"]/text()')
+	sd_360 = video_url = xml.xpath('//file[@bitrate="embed"]/text()')
+
+	if res == 1080 and len(hd_1080) > 0:
+		video_url = hd_1080[0]
+	elif res in [1080, 720] and len(hd_720) > 0:
+		video_url = hd_720[0]
+	elif len(sd_360) > 0:
+		video_url = sd_360[0]
 	else:
 		raise Ex.MediaNotAvailable
 
@@ -167,20 +162,3 @@ def GetVideoId(url):
 		return video_id[0].split('=')[-1]
 	else:
 		raise Ex.MediaNotAvailable
-
-####################################################################################################
-def GetVideoJson(url):
-
-	data = HTTP.Request(url, cacheTime=CACHE_1HOUR).content
-	json = RE_JSON.findall(data)
-
-	if len(json) < 1:
-		json = RE_JSON_ALT.findall(data)
-
-		if len(json) < 1:
-			raise Ex.MediaNotAvailable
-
-	json = ''.join(json)
-
-	json_obj = JSON.ObjectFromString(String.Base64Decode(json))
-	return json_obj

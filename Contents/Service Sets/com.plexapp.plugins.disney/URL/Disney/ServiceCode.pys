@@ -21,7 +21,7 @@ def MetadataObjectForURL(url):
 	duration = int(json_obj['duration_sec'])*1000
 	thumb = json_obj['thumb']
 
-	if "Full Episode" in json_obj['vType'] and 'ptitle' in json_obj:
+	if 'Full Episode' in json_obj['vType'] and 'ptitle' in json_obj:
 		show_title = json_obj['ptitle']
 
 		return EpisodeObject(
