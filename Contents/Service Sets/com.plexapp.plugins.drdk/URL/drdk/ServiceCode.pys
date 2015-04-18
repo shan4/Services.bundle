@@ -67,7 +67,15 @@ def MetadataObjectForURL(url):
 				mo.summary = json['Data'][0]['Description']
 				mo.thumb = 'http://www.dr.dk/mu/ProgramCard/ImageUri/' + json['Data'][0]['Slug'] + '?height=512&width=512'
 				mo.art = 'http://www.dr.dk/mu/ProgramCard/ImageUri/' + json['Data'][0]['Slug']
-				mo.duration = json['Data'][0]['Assets'][0]['DurationInMilliseconds']
+
+				for data_asset in json['Data'][0]['Assets']:
+					if data_asset['Kind'] == 'Image':
+						continue
+					else:
+						asset = data_asset
+						break
+
+				mo.duration = asset['DurationInMilliseconds']
 		else:
 			raise Ex.MediaNotAvailable
 
@@ -141,9 +149,16 @@ def PlayMedia(slug=None, url=None):
 		else:
 			dataResource = dataResource[0]
 
-		json = JSON.ObjectFromURL(dataResource)['Data'][0]['Assets'][0]
+		asset_json = JSON.ObjectFromURL(dataResource)['Data'][0]['Assets']
 
-		for links in json['Links']:
+		for data_asset in asset_json:
+			if data_asset['Kind'] == 'Image':
+				continue
+			else:
+				asset = data_asset
+				break
+
+		for links in asset['Links']:
 			if 'HLS' in links['Target']:
 				return IndirectResponse(EpisodeObject, key=links['Uri'])
 
@@ -151,7 +166,3 @@ def PlayMedia(slug=None, url=None):
 def TestURLs():
 
 	pass
-
-####################################################################################################
-
-	
