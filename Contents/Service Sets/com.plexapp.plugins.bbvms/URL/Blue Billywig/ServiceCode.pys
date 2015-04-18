@@ -91,7 +91,7 @@ def CreateXmlURL(url):
 	# Find the bbvms_id
 	if bbvms_host == 'allerhande':
 		html = HTML.ElementFromURL(url)
-		bbvms_id = html.xpath('//div[@id="allerhande-videocontainer"]/@data-id')[0]
+		bbvms_id = html.xpath('//div[@id="video-container"]/@data-id')[0]
 	elif bbvms_host == 'gelderlander':
 		id = Regex('#(1\.\d+)').search(url).group(1)
 		json_obj = JSON.ObjectFromURL('http://www.gelderlander.nl/render/%s' % id)
