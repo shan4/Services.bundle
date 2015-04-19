@@ -8,7 +8,8 @@ def MetadataObjectForURL(url):
 	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS, cacheTime=CACHE_1WEEK)
 
 	title = html.xpath('//title/text()')[0].strip()
-	summary = html.xpath('//meta[@name="description"]/@content|//meta[@name="og:description"]/@content')[0].strip()
+	summary = html.xpath('//meta[@name="description"]/@content|//meta[@name="og:description" or @property="og:description"]/@content')[0]
+	summary = String.StripTags(summary).strip()
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[0].replace('-150x150.jpg', '.jpg')
 
 	try:
