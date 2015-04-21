@@ -203,7 +203,7 @@ def GetTracks(url, thumb, id = None):
                 if not 'sources' in track:
                     continue
 
-                track_id = track['sources'][0]['file'].rsplit("/", 1)[1].split(".")[0]
+                track_id = track['sources'][0]['file'].rsplit("/", 1)[1].rsplit(".",1)[0]
                 
                 if id and not id in track_id:
                     continue
@@ -444,15 +444,15 @@ def GetSegments(json_data):
                     if int(json_data['files'][file]['height']) > 0:
                         segments[id]['aspect_ratio'] = int(float(int(json_data['files'][file]['width']) / int(json_data['files'][file]['height'])))
 
-        if 'length' in json_data['files'][file]:
-            length = json_data['files'][file]['length']
-            if not ':' in length:
-                duration = int(float(length) * 1000)
+            if 'length' in json_data['files'][file]:
+                length = json_data['files'][file]['length']
+                if not ':' in length:
+                    duration = int(float(length) * 1000)
+                else:
+                    duration = Datetime.MillisecondsFromString(length)
             else:
-                duration = Datetime.MillisecondsFromString(length)
-        else:
-            duration = None
-            
-        segments[id]['parts'].append({'media_url': media_url, 'duration': duration}) 
+                duration = None
+                
+            segments[id]['parts'].append({'media_url': media_url, 'duration': duration}) 
         
     return segments
