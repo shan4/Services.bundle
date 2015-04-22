@@ -23,13 +23,10 @@ def MetadataObjectForURL(url):
 		raise Ex.MediaNotAvailable
 
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[0].split('?')[0]
-	date = html.xpath('//span[@itemprop="uploadDate"]/text()')[0].split('T')[0]
-	originally_available_at = Datetime.ParseDate(date).date()
 
 	return VideoClipObject(
 		title = title[0],
-		thumb = Resource.ContentsOfURLWithFallback(url=thumb),
-		originally_available_at = originally_available_at
+		thumb = Resource.ContentsOfURLWithFallback(url=thumb)
 	)
 
 ####################################################################################################
