@@ -108,6 +108,7 @@ def MediaObjectsForURL(url):
 	for media_url in media_urls:
 
 		try:
+			media_url = media_url.replace('{device}', 'pc')
 			video_data = XML.ElementFromURL(media_url)
 		except:
 			raise Ex.MediaNotAvailable
