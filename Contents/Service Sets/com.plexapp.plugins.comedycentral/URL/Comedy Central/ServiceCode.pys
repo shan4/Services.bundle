@@ -153,7 +153,7 @@ def MediaObjectsForURL(url):
 				PartObject(
 					key = RTMPVideoURL(
 						url='rtmpe://viacommtvstrmfs.fplive.net:1935/viacommtvstrm',
-						clip='mp4:%s' % (part['rtmp_url'].split('/viacomccstrm/')[-1])
+						clip='mp4:%s' % (part['rtmp_url'].split('/viacomccstrm/')[-1].split('/mtvnorigin/')[-1])
 					),
 					duration = int(part['duration'])*1000
 				)
