@@ -13,7 +13,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
 
 	if len(html.xpath('//*[text()="File Not Found" or contains(text(), "was removed")]')) > 0:
 		raise Ex.MediaNotAvailable
@@ -28,7 +31,10 @@ def MetadataObjectForURL(url):
 
 	time.sleep(5)
 
-	html = HTML.ElementFromURL(url, values=post_values, method='POST')
+	try:
+		html = HTML.ElementFromURL(url, values=post_values, method='POST')
+	except:
+		raise Ex.MediaNotAvailable
 
 	title = html.xpath('//meta[@property="og:title"]/@content')[0]
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[-1].replace('_t.jpg', '.jpg')
@@ -59,7 +65,10 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
 
 	if len(html.xpath('//*[text()="File Not Found" or contains(text(), "was removed")]')) > 0:
 		raise Ex.MediaNotAvailable
@@ -74,7 +83,10 @@ def PlayVideo(url):
 
 	time.sleep(5)
 
-	page = HTTP.Request(url, values=post_values, method='POST').content
+	try:
+		page = HTTP.Request(url, values=post_values, method='POST').content
+	except:
+		raise Ex.MediaNotAvailable
 
 	file = RE_FILE.search(page)
 
