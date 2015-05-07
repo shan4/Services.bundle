@@ -8,9 +8,9 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http:\/\/c\.brightcove\.com\/services\/viewer\/htmlFederated\?playerKey=[^&amp;]+&amp;dynamicStreaming=true&amp;(@|%40)videoPlayer=\d+(&amp;refURL=.+)?$</string>
-				<string>^(?i)(?!.*playerKey)https?:\/\/(c|secure)\.brightcove\.com/services\/viewer\/htmlFederated.+(videoId|videoPlayer)=\d+</string>
-				<string>^(?i)https?:\/\/(c|secure)\.brightcove\.com\/services\/viewer\/federated_f9.+(videoId|videoPlayer)=\d+</string>
+				<string>^http:\/\/c\.brightcove\.com\/services\/viewer\/htmlFederated\?playerKey=[^&amp;]+&amp;dynamicStreaming=true&amp;(@|%40)videoPlayer=.+(&amp;refURL=.+)?$</string>
+				<string>^(?i)(?!.*playerKey)https?:\/\/(c|secure)\.brightcove\.com/services\/viewer\/htmlFederated.+(videoId|videoPlayer)=.+</string>
+				<string>^(?i)https?:\/\/(c|secure)\.brightcove\.com\/services\/viewer\/federated_f9.+(videoId|videoPlayer)=.+</string>
 			</array>
 		</dict>
 	</dict>
