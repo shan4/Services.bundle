@@ -1,7 +1,5 @@
 import urlparse
 
-DEVELOPER_KEY = 'AI39si7PodNU93CVDU6kxh3-m2R9hkwqoVrfijDMr0L85J94ZrJFlimNxzFA9cSky9jCSHz9epJdps8yqHu1wb743d_SfSCRWA'
-YOUTUBE_VIDEO_DETAILS = 'https://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc'
 YOUTUBE_VIDEO_FORMATS =	['360p',	'720p',	'1080p']
 YOUTUBE_FMT =			[18,		22,		37]
 YOUTUBE_CONTAINERS =	['mp4',		'mp4',	'mp4']
@@ -9,7 +7,7 @@ YOUTUBE_VIDEORES =		['360',		'720',	'1080']
 YOUTUBE_VIDEOCODEC =	['h264',	'h264',	'h264']
 YOUTUBE_AUDIOCODEC =	['aac',		'aac',	'aac']
 
-HTTP_HEADERS = {'X-GData-Key':'key=%s' % DEVELOPER_KEY}
+HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
 
 RE_URL_MAP = Regex('"url_encoded_fmt_stream_map".+?"([^"]+)')
 RE_URL_MAP_ALT = Regex('&amp;url_encoded_fmt_stream_map=(.+?)&amp;')
@@ -20,6 +18,7 @@ RE_VID_ID = Regex('/(v|e(mbed)?)/(v/)?(?P<id>.{11})')
 RE_VID_PID = Regex('pid=(.{11})')
 RE_VIDEO_ID = Regex('"video_id":\s"([^"]+)')
 
+RE_DURATION = Regex('PT(\d+)M(\d+)S')
 RE_AGE_GATE = Regex('(player-age-gate-content">)')
 
 ####################################################################################################
@@ -103,47 +102,26 @@ def MetadataObjectForURL(url):
 
   if url.find('?v=') == -1:
     return None
-  else:
-    video_id = url[url.find('?v=')+3:].split('&')[0]
 
-    if video_id == '':
-      raise Ex.MediaNotAvailable
+  html = HTML.ElementFromURL(url)
 
-  try:
-    details = JSON.ObjectFromURL(YOUTUBE_VIDEO_DETAILS % video_id, headers=HTTP_HEADERS, cacheTime=CACHE_1HOUR)['data']
-  except:
-    raise Ex.MediaNotAuthorized
+  title = html.xpath('//meta[@property="og:title"]/@content')[0]
+  summary = html.xpath('//meta[@property="og:description"]/@content')[0]
+  thumb = html.xpath('//meta[@property="og:image"]/@content')[0]
 
-  if 'hqDefault' in details['thumbnail']:
-    thumb = details['thumbnail']['hqDefault']
-  elif 'sqDefault' in details['thumbnail']:
-    thumb = details['thumbnail']['sqDefault']
-  else:
-    thumb = ''
+  date = html.xpath('//meta[@itemprop="datePublished"]/@content')[0]
+  date = Datetime.ParseDate(date).date()
 
-  try:
-    rating = details['rating'] * 2
-  except:
-    rating = None
-
-  try:
-    tags = details['tags']
-  except:
-    tags = []
-
-  duration = details['duration'] * 1000
-  if not isinstance(duration, int):
-    raise Ex.MediaNotAvailable
+  duration = html.xpath('//meta[@itemprop="duration"]/@content')[0]
+  d = RE_DURATION.search(duration)
+  total_duration = ((int(d.group(1)) * 60) + (int(d.group(2)))) * 1000
 
   return VideoClipObject(
-    title = details['title'],
-    summary = details['description'],
+    title = title,
+    summary = summary,
     thumb = Resource.ContentsOfURLWithFallback(thumb.replace('https://', 'http://')),
-    rating = rating,
-    tags = tags,
-    originally_available_at = Datetime.ParseDate(details['uploaded']).date(),
-    duration = duration,
-    genres = [details['category']]
+    originally_available_at = date,
+    duration = total_duration
   )
 
 ####################################################################################################
@@ -211,7 +189,6 @@ def PlayVideo(url=None, default_fmt=None, **kwargs):
       yt_page = HTTP.Request('%s&has_verified=1' % url, headers=HTTP_HEADERS, cacheTime=1).content
     else:
       yt_page = HTTP.Request(url, headers=HTTP_HEADERS, cacheTime=1).content
-  # If 404...
   except:
     raise Ex.MediaNotAvailable
 
@@ -219,14 +196,14 @@ def PlayVideo(url=None, default_fmt=None, **kwargs):
   video_id = url[url.find('?v=')+3:].split('&')[0]
 
   # Check for age-gate
-  if RE_AGE_GATE.search(yt_page) is not None:
+  if RE_AGE_GATE.search(yt_page):
     age_gate = True
     data = {
       'video_id': video_id,
       'el': 'player_embedded',
       'gl': 'US',
       'hl': 'en',
-      'eurl': 'https://youtube.googleapis.com/v/' + video_id,
+      'eurl': 'https://youtube.googleapis.com/v/%s' % (video_id),
       'asv': 3,
       'sts':'1588',
     }
@@ -234,15 +211,18 @@ def PlayVideo(url=None, default_fmt=None, **kwargs):
     yt_page = HTTP.Request(video_info_url, values=data, headers=HTTP_HEADERS).content
   else:
     age_gate = False
-    try:
-      details = JSON.ObjectFromURL(YOUTUBE_VIDEO_DETAILS % video_id, headers=HTTP_HEADERS)['data']
-    except:
-      raise Ex.MediaNotAuthorized
 
-    if 'status' in details:
-      if 'value' in details['status'] and details['status']['value'] == 'restricted':
-        if 'reason' in details['status'] and details['status']['reason'] == 'requesterRegion':
-          raise Ex.MediaGeoblocked
+    # Other checks (geoblocking, etc.) should be done here. Need to figure out what checks and how to check
+    # *** OLD CODE ***
+    # try:
+    #  details = JSON.ObjectFromURL(YOUTUBE_VIDEO_DETAILS % video_id, headers=HTTP_HEADERS)['data']
+    #except:
+    #  raise Ex.MediaNotAuthorized
+    #
+    #if 'status' in details:
+    #  if 'value' in details['status'] and details['status']['value'] == 'restricted':
+    #    if 'reason' in details['status'] and details['status']['reason'] == 'requesterRegion':
+    #      raise Ex.MediaGeoblocked
 
   # Build up the format map.
   if age_gate:
