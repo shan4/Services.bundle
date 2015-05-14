@@ -105,11 +105,12 @@ def MetadataObjectForURL(url):
 
   html = HTML.ElementFromURL(url)
 
-  unavailable = html.xpath('//h1[@id="unavailable-message"]')
-  if len(unavailable) > 0:
+  title = html.xpath('//meta[@property="og:title"]/@content')
+
+  if len(title) < 1:
     raise Ex.MediaNotAvailable
 
-  title = html.xpath('//meta[@property="og:title"]/@content')[0]
+  title = title[0]
   summary = html.xpath('//meta[@property="og:description"]/@content')[0]
   thumb = html.xpath('//meta[@property="og:image"]/@content')[0]
 
