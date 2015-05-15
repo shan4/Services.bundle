@@ -100,8 +100,8 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-  if url.find('?v=') == -1:
-    return None
+  if url.find('?v=') == -1 or len(url.split('?v=')[-1].split('&')[0]) != 11:
+    raise Ex.MediaNotAvailable
 
   html = HTML.ElementFromURL(url)
 
