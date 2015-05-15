@@ -74,7 +74,11 @@ def PlayVideo(url, **kwargs):
 ####################################################################################################
 def GetJSON(url):
 
-	data = HTTP.Request(url).content
+	try:
+		data = HTTP.Request(url).content
+	except:
+		raise Ex.MediaNotAvailable
+
 	json = RE_JSON.search(data)
 
 	if not json:
