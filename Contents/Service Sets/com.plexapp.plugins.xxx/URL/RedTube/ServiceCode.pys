@@ -15,7 +15,10 @@ def MetadataObjectForURL(url):
 	if not video_id:
 		return None
 
-	data = JSON.ObjectFromURL(API_URL % video_id.group('video_id'))
+	try:
+		data = JSON.ObjectFromURL(API_URL % video_id.group('video_id'))
+	except:
+		raise Ex.MediaNotAvailable
 
 	if not 'video' in data:
 		raise Ex.MediaNotAvailable
