@@ -2,11 +2,16 @@ USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 7_0 like Mac OS X) AppleWebKit/537.51.1 
 
 ####################################################################################################
 def NormalizeURL(url):
+
     return url
 
 ####################################################################################################
 def MetadataObjectForURL(url):
-    pageElement = HTML.ElementFromURL(url)
+
+    try:
+        pageElement = HTML.ElementFromURL(url)
+    except:
+        raise Ex.MediaNotAvailable
     
     if 'apl.tv' in url:    
         title = pageElement.xpath('//meta[@property="og:title"]')[0].get('content')
@@ -54,6 +59,7 @@ def MetadataObjectForURL(url):
 
 ####################################################################################################
 def MediaObjectsForURL(url):
+
     mediaObjs = []
 
     if 'apl.tv' in url:
@@ -94,6 +100,7 @@ def MediaObjectsForURL(url):
 ####################################################################################################
 @indirect
 def PlayLive(url):
+
     try:
         pageElement     = HTML.ElementFromURL(url)
         videoUStreamURL = pageElement.xpath("//div[contains(@class, 'video-container')]//iframe/@src")[0]
@@ -110,6 +117,7 @@ def PlayLive(url):
 ####################################################################################################
 @indirect
 def PlayVideo(url):
+
     headers = {}
     headers['User-Agent'] = USER_AGENT
 
