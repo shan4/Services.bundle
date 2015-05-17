@@ -105,7 +105,7 @@ def MetadataObjectForURL(url):
         )
 
     elif media_type == 'audio':            
-        return Album(
+        return AlbumObject(
             key = Callback(GetTracks, url=url, thumb=thumb),
             title = title,
             summary = summary,
@@ -186,7 +186,7 @@ def MediaObjectsForURL(url):
     return sorted_media_objects 
 
 ####################################################################################################         
-def GetTracks(url, thumb, id = None):
+def GetTracks(url, thumb, id = None, **kwargs):
     oc = ObjectContainer()
     
     page_element = HTML.ElementFromURL(url, cacheTime=CACHE_1MONTH)
