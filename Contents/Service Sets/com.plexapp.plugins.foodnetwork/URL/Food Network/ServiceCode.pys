@@ -75,7 +75,4 @@ def GetJSON(url):
 	if not json:
 		raise Ex.MediaNotAvailable
 	else:
-		Log("===============================")
-		Log(json.group(1))
-		Log("===============================")
 		return JSON.ObjectFromString(json.group(1))
