@@ -1,4 +1,4 @@
-RE_JSON = Regex('\{"video": (\{.+\})\}', Regex.DOTALL)
+RE_JSON = Regex('\{"video": *(\{.+?\})\}', Regex.DOTALL)
 NAMESPACES = {'a': 'http://www.w3.org/2005/SMIL21/Language'}
 
 ####################################################################################################
@@ -75,4 +75,7 @@ def GetJSON(url):
 	if not json:
 		raise Ex.MediaNotAvailable
 	else:
+		Log("===============================")
+		Log(json.group(1))
+		Log("===============================")
 		return JSON.ObjectFromString(json.group(1))
