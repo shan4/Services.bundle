@@ -58,28 +58,38 @@ def MetadataObjectForURL(url):
         )
 
 ####################################################################################################
+@deferred
 def MediaObjectsForURL(url):
 
-    mediaObjs = []
-
     if 'apl.tv' in url:
-        mediaObjs.append(
+        try:
+            pageElement = HTML.ElementFromURL(url, cacheTime = CACHE_1HOUR)
+            videoUStreamURL = pageElement.xpath("//meta[@name='twitter:player']/@content")[0]
+            videoID = videoUStreamURL.split("/")[-1]
+        except:
+            raise Ex.MediaNotAvailable
+        
+        try:
+            hlsurl = 'http://iphone-streaming.ustream.tv/ustreamVideo/%s/streams/live/playlist.m3u8' % videoID
+            headers = HTTP.Request(url = hlsurl).headers
+        except:
+            raise Ex.LiveMediaNotStarted
+
+        return [
             MediaObject(
-                container               = 'mpegts',
-                video_codec             = VideoCodec.H264,
-                audio_codec             = AudioCodec.AAC,                 
                 audio_channels          = 2,
+                video_resolution        = 480,
                 optimized_for_streaming = True,
                 parts                   = [
                     PartObject(
-                        key = HTTPLiveStreamURL(Callback(PlayLive, url = url))
+                        key = HTTPLiveStreamURL(hlsurl)
                     )
                 ]
             )
-        )
+        ]
         
     else:
-        mediaObjs.append(
+        return [
             MediaObject(
                 container               = Container.MP4,
                 video_codec             = VideoCodec.H264,
@@ -93,26 +103,7 @@ def MediaObjectsForURL(url):
                     )
                 ]
             )
-        )
-
-    return mediaObjs
-
-####################################################################################################
-@indirect
-def PlayLive(url):
-
-    try:
-        pageElement     = HTML.ElementFromURL(url)
-        videoUStreamURL = pageElement.xpath("//div[contains(@class, 'video-container')]//iframe/@src")[0]
-        videoID         = Regex('(?<=embed/)[0-9]+').search(videoUStreamURL).group(0)
-        hlsurl          = 'http://iphone-streaming.ustream.tv/ustreamVideo/%s/streams/live/playlist.m3u8' % videoID
-    except:
-        raise Ex.MediaNotAvailable
-   
-    return IndirectResponse(
-        VideoClipObject,
-        key = HTTPLiveStreamURL(url = hlsurl)
-    )
+        ]
 
 ####################################################################################################
 @indirect
