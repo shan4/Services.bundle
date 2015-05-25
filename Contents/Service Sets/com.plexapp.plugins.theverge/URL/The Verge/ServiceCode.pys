@@ -9,7 +9,12 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except Ex.BadStatusLine, e:
+		Log("Could not fetch %s" % (url))
+	except Ex.HTTPError, e:
+		Log("Could not fetch %s, code %d" % (url, e.code))
 
 	yt_iframe = html.xpath('//iframe[contains(@src, "youtube.com/embed/")]/@src')
 	if len(yt_iframe) == 1:
