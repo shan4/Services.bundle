@@ -12,7 +12,7 @@
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://www.pokertube.com/videos/(?!\?|&amp;).+</string>
+				<string>^https?://www.pokertube.com/videos/(?!\?|&amp;).+</string>
 			</array>
 		</dict>
 	</dict>
