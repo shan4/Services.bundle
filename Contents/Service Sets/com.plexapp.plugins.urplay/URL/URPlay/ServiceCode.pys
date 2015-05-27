@@ -5,32 +5,33 @@ RE_VIDEO_DATA = Regex('urPlayer.init\((.*)\);')
 
 ####################################################################################################
 def MetadataObjectForURL(url):
+
     element = HTML.ElementFromURL(url)
-    
+
     try:
         title = unicode(element.xpath("//*[@class='tv']//h2/text()")[0]).strip()
     except:
         title = unicode(element.xpath("//meta[@property='og:title']/@content")[0]).strip()
-        
+
     summary = unicode(element.xpath("//meta[@property='og:description']/@content")[0]).strip()
     thumb   = element.xpath("//meta[@property='og:image']/@content")[0]
-    
+
     try:
         show = unicode(element.xpath("//*[@class='tv']//h1/text()")[0]).strip()
     except:
         show = None
-        
+
     try:
         durationString = element.xpath("//*[@id='date-time']//dd/text()")[0]
         duration       = (int(durationString.split(':')[0]) * 60 + int(durationString.split(':')[1])) * 1000
     except:
         duration = None
-    
+
     try:
         originally_available_at = Datetime.ParseDate(element.xpath("//time/@datetime")[0].split('T')[0]).date()
     except:
         originally_available_at = None
-    
+
     return EpisodeObject(
         url = url,
         title = title,
@@ -43,14 +44,15 @@ def MetadataObjectForURL(url):
 
 ####################################################################################################
 def MediaObjectsForURL(url):
+
     return [
         MediaObject(
-            video_resolution        = 'sd', 
-            audio_channels          = 2,
+            video_resolution = 'sd', 
+            audio_channels = 2,
             optimized_for_streaming = True,
-            parts                   = [
+            parts = [
                 PartObject(
-                    key = HTTPLiveStreamURL(Callback(PlayVideo, url = url))
+                    key = HTTPLiveStreamURL(Callback(PlayVideo, url=url))
                 )
             ]
         )
@@ -59,17 +61,24 @@ def MediaObjectsForURL(url):
 ####################################################################################################
 @indirect
 def PlayVideo(url):
+
     try:
         content = HTTP.Request(url).content
         data    = JSON.ObjectFromString(RE_VIDEO_DATA.search(content).groups()[0])
     except:
         raise Ex.MediaNotAvailable
-    
-    if data['file_html5_hd']:
+
+    if 'file_html5_hd' in data and data['file_html5_hd']:
         file = data['file_html5_hd']
-    else:
+    elif 'file_html5' in data and data['file_html5']:
         file = data['file_html5']
-         
+    elif 'file_http_hd' in data and data['file_http_hd']:
+        file = data['file_http_hd']
+    elif 'file_http' in data and data['file_http']:
+        file = data['file_http']
+    else:
+        raise Ex.MediaNotAvailable
+
     hls_url = 'http://' + data['streaming_config']['streamer']['redirect'] + '/' + \
               file + data['streaming_config']['http_streaming']['hls_file'] + \
               '?pid=' + ''.join(random.choice(string.ascii_lowercase) for x in range(3)) + \
@@ -79,17 +88,18 @@ def PlayVideo(url):
         VideoClipObject,
         key = HTTPLiveStreamURL(GetClientDependentURL(hls_url))
     )
-    
+
 ###########################################################
 def GetClientDependentURL(url):
+
     if Client.Platform in ['MacOSX', 'Windows', None]:
         streams = GetHLSStreams(url)
-    
+
         # Return highest bitrate url since PMC can't handle HLS correctly
         # Also consider a client not identifying itself as needing help,
         # the Samsung client is one of those.
         maxBitrateURL = streams[0]['url']
-        
+
         return maxBitrateURL
     else:
         # Other clients can handle HLS correctly
@@ -97,6 +107,7 @@ def GetClientDependentURL(url):
 
 ###########################################################
 def GetHLSStreams(url):
+
     streams = []
 
     playList = HTTP.Request(url).content
@@ -117,14 +128,14 @@ def GetHLSStreams(url):
 
         elif ".m3u8" in line:
             path = ''
-            
+
             if not line.startswith("http"):
                 path = url[ : url.rfind('/') + 1]
-                
+
             stream["url"] = path + line
-                    
+
             streams.append(stream)
-                
+
     sorted_streams = sorted(streams, key = lambda stream: stream["bitrate"], reverse = True)        
 
     return sorted_streams
