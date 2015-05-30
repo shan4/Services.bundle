@@ -55,22 +55,22 @@ def MediaObjectsForURL(url):
         mo = []
         
         return [
-			MediaObject(
-				video_resolution = video_resolution,
-				audio_channels = 2,
-				parts = [
-					PartObject(
-						key =
-							HTTPLiveStreamURL(
-                				Callback(
-                    				PlayVideo,
-                    				url = video_url,
-                    				video_resolution = video_resolution
-                				)
-            			)
-					)
-				],
-			) for video_resolution in ['720', '576', '360', '270', '226'] 	
+            MediaObject(
+                video_resolution = video_resolution,
+                audio_channels = 2,
+                parts = [
+                    PartObject(
+                        key =
+                            HTTPLiveStreamURL(
+                                Callback(
+                                    PlayVideo,
+                                    url = video_url,
+                                    video_resolution = video_resolution
+                                )
+                        )
+                    )
+                ],
+            ) for video_resolution in ['720', '576', '360', '270', '226']   
         ] 
     
     raise Ex.MediaNotAvailable
