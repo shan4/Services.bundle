@@ -8,13 +8,9 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://www\.hgtv\.ca/video/\?releasePID=.+</string>
+				<string>^http:\/\/(www\.)*hgtv\.ca\/video\/video\.html\?v\=\d+</string>
 			</array>
 		</dict>
 	</dict>
-	<key>PlexFrameworkFlags</key>
-	<array>
-		<string>UseRealRTMP</string>
-	</array>
 </dict>
 </plist>
