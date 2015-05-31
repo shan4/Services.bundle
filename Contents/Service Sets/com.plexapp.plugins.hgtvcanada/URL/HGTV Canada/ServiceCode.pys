@@ -31,17 +31,25 @@ def MetadataObjectForURL(url):
             if 'duration' in entry['content']:
                 duration = int(entry['content']['duration'] * 1000) 
         
-        return EpisodeObject(
-            url = url,
-            title = title,
-            summary = summary,
-            thumb = thumb,
-            show = show,
-            season = season,
-            index = index,
-            originally_available_at = originally_available_at,
-            duration = duration
-        )
+        if show and season and index:
+            return EpisodeObject(
+                title = title,
+                summary = summary,
+                thumb = thumb,
+                show = show,
+                season = season,
+                index = index,
+                originally_available_at = originally_available_at,
+                duration = duration
+            )
+        else:
+            return VideoClipObject(
+                title = title,
+                summary = summary,
+                thumb = thumb,
+                originally_available_at = originally_available_at,
+                duration = duration
+            )
 
     raise Ex.MediaNotAvailable
     
@@ -198,11 +206,11 @@ def CreatePatchedPlaylist(url, cookies):
     new_playlist = ''
 
     for line in original_playlist.splitlines():
-        if line.startswith('#EXT-X-KEY'):
+        if line.startswith('#EXT-X-KEY') and 'https' in line:
             original_key_url = RE_KEY_URI.search(line).groups()[0]
             new_key_url = Callback(ContentOfURL, url = original_key_url, cookies = cookies)
             new_playlist = new_playlist + line.replace(original_key_url, new_key_url) + '\n'
-        elif line.startswith('http') or '.ts' in line:
+        elif line.startswith('https'):
             original_segment_url = line
             new_segment_url = Callback(ContentOfURL, url = original_segment_url, cookies = cookies)
             new_playlist = new_playlist + new_segment_url + '\n'
