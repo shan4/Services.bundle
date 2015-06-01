@@ -16,8 +16,9 @@ def MetadataObjectForURL(url):
   title = data.xpath('//meta[@itemprop="name"]/@content')[0]
   summary = data.xpath('//meta[@itemprop="description"]/@content')[0]
 
-  # TODO
-  # duration = data.xpath('//meta[@itemprop="duration"]/@content')[0]
+  duration = data.xpath('//meta[@itemprop="duration"]/@content')[0]
+  duration = duration.replace('PT', '').replace('H', ':').replace('M', ':').replace('S', '')
+  duration = Datetime.MillisecondsFromString(duration)
 
   thumb = data.xpath('//link[@itemprop="thumbnailUrl"]/@href')[0]
   art = data.xpath('//link[@itemprop="image"]/@href')[0]
@@ -25,6 +26,7 @@ def MetadataObjectForURL(url):
   return VideoClipObject(
     title = title,
     summary = summary,
+    duration = duration,
     thumb = Resource.ContentsOfURLWithFallback(url = thumb),
     art = Resource.ContentsOfURLWithFallback(url = art)
   )
@@ -32,22 +34,24 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 def MediaObjectsForURL(url):
 
-  return [MediaObject(
-    parts = [PartObject(key = Callback( PlayVideo, url = url, quality = 'high' ))],
-    container = "mp4",
-    video_codec = "h264",
-    audio_codec = "aac",
-    video_resolution = 1080,
-    optimized_for_streaming = True
-  ),
-  MediaObject(
-    parts = [PartObject(key = Callback( PlayVideo, url = url, quality = 'low' ))],
-    container = "mp4",
-    video_codec = "h264",
-    audio_codec = "aac",
-    video_resolution = 360,
-    optimized_for_streaming = True
-  )]
+  return [
+    MediaObject(
+      parts = [PartObject(key = Callback( PlayVideo, url = url, quality = 'high' ))],
+      container = Container.MP4,
+      video_codec = VideoCodec.H264,
+      audio_codec = AudioCodec.AAC,
+      video_resolution = 1080,
+      optimized_for_streaming = True
+    ),
+    MediaObject(
+      parts = [PartObject(key = Callback( PlayVideo, url = url, quality = 'low' ))],
+      container = Container.MP4,
+      video_codec = VideoCodec.H264,
+      audio_codec = AudioCodec.AAC,
+      video_resolution = 360,
+      optimized_for_streaming = True
+    )
+  ]
 
 ####################################################################################################
 @indirect
@@ -56,11 +60,14 @@ def PlayVideo(url, quality):
   data = HTML.ElementFromURL(url)
   video_url = None
 
-  video_url = data.xpath('//link[@itemprop="contentURL"]/@href')[0]
-  if quality == 'high':
-    video_url = video_url.replace('low.mp4', 'high.mp4')
+  video_url = data.xpath('//link[@itemprop="contentURL"]/@href')
 
-  if not video_url:
+  if len(video_url) < 1:
     raise Ex.MediaNotAvailable
 
-  return IndirectResponse(VideoClipObject, key = video_url)
+  if quality == 'high':
+    video_url = video_url[0].replace('low.mp4', 'high.mp4')
+  else:
+    video_url = video_url[0]
+
+  return IndirectResponse(VideoClipObject, key=video_url)

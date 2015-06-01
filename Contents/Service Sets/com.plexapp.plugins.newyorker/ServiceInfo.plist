@@ -4,11 +4,11 @@
 <dict>
 	<key>URL</key>
 	<dict>
-		<key>NewYorker Video</key>
+		<key>The New Yorker</key>
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://video\.newyorker\.com/watch/.+</string>
+				<string>^http:\/\/video\.newyorker\.com/watch/.+</string>
 			</array>
 		</dict>
 	</dict>
