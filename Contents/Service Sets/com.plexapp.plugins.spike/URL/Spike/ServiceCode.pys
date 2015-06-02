@@ -22,10 +22,15 @@ def MetadataObjectForURL(url):
 	title = html.xpath('//meta[@property="og:title"]/@content')[0]
 	summary = html.xpath('//meta[@property="og:description"]/@content')[0]
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[0].split('?')[0]
-	try:
-		duration = int(html.xpath('//meta[@itemprop="duration"]/@content')[0])
-	except:
-		video_player_box = html.xpath('//div[@id="video_player_box"]')
+	duration = html.xpath('//meta[@itemprop="duration"]/@content')[0]
+	if duration:
+		# This duration can be blank or be T3M7S format
+		# But this is the only place to pull the duration on all pages without issues
+		duration = duration.replace('T', '').replace('S', '')
+		duration_1 = int(duration.split('M')[0]) * 60
+		duration = (duration_1 + int(duration.split('M')[1])) * 1000
+	else:
+		video_player_box = html.xpath('//div[@class="video_player"]')
 		if len(video_player_box) < 1:
 			raise Ex.MediaExpired
 
@@ -44,10 +49,9 @@ def MetadataObjectForURL(url):
 		duration = int(duration*1000)
 
 	if '/full-episodes/' in url or '/episodes/' in url:
-		show_title = html.xpath('//title')[0].text.split(' | ')[0]
-
+		show_title = html.xpath('//title')[0].text.split(' - ')[1]
 		try:
-			air_date = html.xpath('//meta[@itemprop="datePublished"]/@content')[0]
+			air_date = html.xpath('//li[@class="airDate"]//text()')[0].replace('Aired ', '')
 			originally_available_at = Datetime.ParseDate(air_date).date()
 		except:
 			originally_available_at = None
@@ -78,7 +82,7 @@ def MetadataObjectForURL(url):
 def MediaObjectsForURL(url):
     try: 
         data = HTML.ElementFromURL(url)
-        mgid = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//div[@id="video_player_box"]/@data-mgid')
+        mgid = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//div[@class="video_player"]/@data-mgid')
     except:
         raise Ex.MediaNotAvailable
 
