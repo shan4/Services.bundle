@@ -1,112 +1,116 @@
-FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?count=true&byCategoryIDs=%s&startIndex=%s&endIndex=%s&sort=pubDate|desc'
+FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?byContent=byReleases%3DbyPid%253D'
 RAW_HLS_CLIENTS = ['Android', 'iOS', 'Roku', 'Safari']
 
+RE_PID = Regex('pid: *"(.*)",')
 RE_KEY_URI = Regex('URI *= *"(.*)"')
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18'
 
 #########################################################################################
 def MetadataObjectForURL(url):
     
-    try:
-        id = url.split("=")[-1]
-    except:
+    pid = GetPID(url)
+    
+    if not pid:
         raise Ex.MediaNotAvailable
-    
-    json_data = JSON.ObjectFromURL(url=FEED_URL % ('', 1, 1000), cacheTime=CACHE_1HOUR)    
-    
-    for entry in json_data['entries']:
-        if str(id) != str(entry['id'].split("/")[-1]):
-            continue
+        
+    data = JSON.ObjectFromURL(FEED_URL + pid + '&form=json')
+    entry = data['entries'][0] 
             
-        title = entry['title']
-        summary = entry['description'] if 'description' in entry else None
-        thumb = entry['defaultThumbnailUrl'] if 'defaultThumbnailUrl' in entry else None
-        show = entry['pl1$show'] if 'pl1$show' in entry else None
-        season = int(entry['pl1$season']) if 'pl1$season' in entry else None
-        index = int(entry['pl1$episode']) if 'pl1$episode' in entry else None
-        originally_available_at = Datetime.FromTimestamp(entry['pubDate'] / 1000).date() if 'pubDate' in entry else None
+    title = entry['title']
+    summary = entry['description'] if 'description' in entry else None
+    thumb = entry['plmedia$defaultThumbnailUrl'] if 'plmedia$defaultThumbnailUrl' in entry else None
+    show = entry['pl1$show'] if 'pl1$show' in entry else None
+    season = int(entry['pl1$season']) if 'pl1$season' in entry else None
+    index = int(entry['pl1$episode']) if 'pl1$episode' in entry else None
+    originally_available_at = Datetime.FromTimestamp(entry['pubDate'] / 1000).date() if 'pubDate' in entry else None
         
-        duration = None
-        if 'content' in entry:
-            if 'duration' in entry['content'][0]:
-                duration = int(float(entry['content'][0]['duration']) * 1000)
-        
-        if show and season and index:
-            return EpisodeObject(
-                title = title,
-                summary = summary,
-                thumb = thumb,
-                show = show,
-                season = season,
-                index = index,
-                originally_available_at = originally_available_at,
-                duration = duration
-            )
-        else:
-            return VideoClipObject(
-                title = title,
-                summary = summary,
-                thumb = thumb,
-                originally_available_at = originally_available_at,
-                duration = duration
-            )
-
-    raise Ex.MediaNotAvailable
+    duration = None
+    if 'media$content' in entry:
+        if 'plfile$duration' in entry['media$content'][0]:
+            duration = int(float(entry['media$content'][0]['plfile$duration']) * 1000)
+    
+    if show and season and index:
+        return EpisodeObject(
+            title = title,
+            summary = summary,
+            thumb = thumb,
+            show = show,
+            season = season,
+            index = index,
+            originally_available_at = originally_available_at,
+            duration = duration
+        )
+    else:
+        return VideoClipObject(
+            title = title,
+            summary = summary,
+            thumb = thumb,
+            originally_available_at = originally_available_at,
+            duration = duration
+        )
     
 #########################################################################################
 @deferred
 def MediaObjectsForURL(url):
-    try:
-        id = url.split("=")[-1]
-    except:
+    pid = GetPID(url)
+    
+    if not pid:
         raise Ex.MediaNotAvailable
-    
-    json_data = JSON.ObjectFromURL(url=FEED_URL % ('', 1, 1000), cacheTime=CACHE_1HOUR)    
-    
-    for entry in json_data['entries']:
-        if str(id) != str(entry['id'].split("/")[-1]):
-            continue
+        
+    data = JSON.ObjectFromURL(FEED_URL + pid + '&form=json')
+    entry = data['entries'][0]  
 
-        mo = []
-        for item in entry['content']:
-            if not "f4m" in item['url']:
-                continue
-            
-            data = HTML.ElementFromURL(item['url'].replace("f4m", "m3u"))
-            video_url = data.xpath("//video/@src")[0]
-            
-            if Client.Platform in RAW_HLS_CLIENTS:
-                parts = [PartObject(key=HTTPLiveStreamURL(url=video_url))]
-            else:
-                # Other clients can't handle SSL/HTTPS playlists
-                parts = [
-                    PartObject(
-                        key =
-                            HTTPLiveStreamURL(
-                                Callback(
-                                    PlayVideo,
-                                    url = video_url,
-                                    video_resolution = int(item['height'])
-                                )
-                        )
+    mo = []
+    for item in entry['media$content']:
+        if not "f4m" in item['plfile$url']:
+            continue
+        
+        data = HTML.ElementFromURL(item['plfile$url'].replace("f4m", "m3u"))
+        video_url = data.xpath("//video/@src")[0]
+        
+        if Client.Platform in RAW_HLS_CLIENTS:
+            parts = [PartObject(key=HTTPLiveStreamURL(url=video_url))]
+        else:
+            # Other clients can't handle SSL/HTTPS playlists
+            parts = [
+                PartObject(
+                    key =
+                        HTTPLiveStreamURL(
+                            Callback(
+                                PlayVideo,
+                                url = video_url,
+                                video_resolution = int(item['plfile$height'])
+                            )
                     )
-                ] 
-                
-            mo.append(   
-                MediaObject(
-                    video_resolution = int(item['height']),
-                    audio_channels = int(item['audioChannels']),
-                    bitrate = int(item['bitrate']),
-                    duration = int(item['duration'] * 1000),
-                    video_frame_rate = int(item['frameRate']),
-                    parts = parts
-                    
                 )
-            )
+            ] 
             
-        return mo
+        mo.append(   
+            MediaObject(
+                video_resolution = int(item['plfile$height']),
+                audio_channels = int(item['plfile$audioChannels']),
+                bitrate = int(item['plfile$bitrate']),
+                duration = int(item['plfile$duration'] * 1000),
+                video_frame_rate = int(item['plfile$frameRate']),
+                parts = parts
+                
+            )
+        )
+        
+    return mo
+
+##########################################################################################
+def GetPID(url): 
+    html = HTML.ElementFromURL(url)
+    pid = None
     
-    raise Ex.MediaNotAvailable
+    for text in html.xpath("//script[@type='text/javascript']/text()"):
+        match = RE_PID.search(text)
+        
+        if match:
+            pid = match.groups()[0]     
+    
+    return pid
 
 ##########################################################################################
 def PlayVideo(url, video_resolution = '544', **kwargs):
