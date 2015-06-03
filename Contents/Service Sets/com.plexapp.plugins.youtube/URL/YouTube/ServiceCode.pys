@@ -257,12 +257,10 @@ def PlayVideo(url=None, default_fmt=None, **kwargs):
       params = f.split('\u0026')
     elif '&' in f:
       params = f.split('&')
-      Log(params)
     else:
       continue
 
     for p in params:
-      Log(p)
       if '=' in p:
         (name, value) = p.split('=', 1)
         map[name] = value
