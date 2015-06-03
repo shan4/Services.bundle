@@ -9,20 +9,19 @@ def MetadataObjectForURL(url):
 
 	title = html.xpath('//meta[@property="og:title"]/@content')[0]
 	summary = html.xpath('//meta[@property="og:description"]/@content')[0]
-	published = html.xpath('//meta[@property="og:published_time"]/@content')[0].split('T')[0]
-	originally_available_at = Datetime.ParseDate(published).date()
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[0]
-	thumb = '%s/%s' % (thumb.split('/1x1')[0], '16x9/640.jpg')
 
-	duration = html.xpath('//h1/following-sibling::span[@class="duration"]/text()')[0]
-	duration = Datetime.MillisecondsFromString(duration)
+	originally_available_at = None
+	published = html.xpath('//meta[@property="og:published_time"]/@content')
+
+	if len(published) > 0:
+		originally_available_at = Datetime.ParseDate(published[0].split('T')[0]).date()
 
 	return VideoClipObject(
 		title = title,
 		summary = summary,
 		originally_available_at = originally_available_at,
-		thumb = Resource.ContentsOfURLWithFallback(thumb),
-		duration = duration
+		thumb = Resource.ContentsOfURLWithFallback(thumb)
 	)
 
 ####################################################################################################
@@ -46,7 +45,18 @@ def PlayVideo(url):
 	html = HTML.ElementFromURL(url)
 	video_url = html.xpath('//video[contains(@src, ".mp4")]/@src|//video/source[contains(@src, ".mp4")]/@src')
 
-	if len(video_url) < 1:
+	if len(video_url) > 0:
+		return IndirectResponse(VideoClipObject, key=video_url[0])
+
+	iframe_url = html.xpath('//iframe[contains(@src, "/embed?id=")]/@src')
+
+	if len(iframe_url) < 1:
 		raise Ex.MediaNotAvailable
 
-	return IndirectResponse(VideoClipObject, key=video_url[0])
+	html = HTML.ElementFromURL('http://%s' % (iframe_url[0].split('//')[-1]))
+	video_url = html.xpath('//video[contains(@src, ".mp4")]/@src|//video/source[contains(@src, ".mp4")]/@src')
+
+	if len(video_url) > 0:
+		return IndirectResponse(VideoClipObject, key=video_url[0])
+
+	raise Ex.MediaNotAvailable

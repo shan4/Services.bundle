@@ -8,12 +8,13 @@
 		<dict>
 			<key>TestURLs</key>
 			<array>
-				<string>http://www.theonion.com/video/escort-reveals-affair-with-that-actor-from-that-th,21057/</string>
 				<string>http://www.theonion.com/video/new-apple-friend-bar-gives-customers-someone-to-ta,17693/</string>
+				<string>http://www.theonion.com/video/seven-male-role-models-every-child-needs-healthy-u-50487</string>
+				<string>http://www.onionstudios.com/videos/baby-naming-tips-for-new-moms-2805</string>
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://www\.theonion\.com/video/[^,]+,\d+</string>
+				<string>^http:\/\/www\.(theonion|onionstudios)\.com\/videos?\/.+(,|-)\d+\/?</string>
 			</array>
 		</dict>
 	</dict>
