@@ -32,7 +32,7 @@ def MetadataObjectForURL(url):
 	duration = 0
 
 	try:
-		mgid = html.xpath('//meta[@property="sm4:video:embed"]/@content')
+		mgid = html.xpath('//meta[@property="sm4:video:embed"]/@content|//div[@id="video_player"]/@data-mgid')
 
 		if len(mgid) < 1:
 			raise Ex.MediaExpired
@@ -91,7 +91,7 @@ def MetadataObjectForURL(url):
 def MediaObjectsForURL(url):
 
 	try:
-		mgid = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//meta[@property="sm4:video:embed"]/@content')
+		mgid = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//meta[@property="sm4:video:embed"]/@content|//div[@id="video_player"]/@data-mgid')
 
 		if len(mgid) < 1:
 			raise Ex.MediaNotAvailable
