@@ -145,7 +145,7 @@ def MediaObjectsForURL(url):
                     key = Callback(PlayVideo, post_url=media_selector_url, media_selector_url=media_selector_url, vpid=vpid, resolution=resolution, ext='m3u8')
                 )
             ]
-        ) for resolution in ['720', '468', '360']
+        ) for resolution in ['1080', '720', '540', '396', '288', '216', '144', '108']
     ]
 
 ####################################################################################################
@@ -156,7 +156,7 @@ def PlayVideo(media_selector_url='', vpid='', resolution='', **kwargs):
         raise Ex.MediaNotAvailable
 
     if not resolution:
-        resolution = '720'
+        resolution = '1080'
     
     try:
         stream_details = JSON.ObjectFromURL(media_selector_url, cacheTime=0)
@@ -164,47 +164,63 @@ def PlayVideo(media_selector_url='', vpid='', resolution='', **kwargs):
         raise Ex.MediaGeoblocked
 
     url = GetMaxBitrateURL(stream_details, 'hls')
+    hls_url = None
 
     if url:
         try:
-            stream_details = JSON.ObjectFromURL(
-                String.Decode('aHR0cDovL29wZW4ubGl2ZS5iYmMuY28udWsvbWVkaWFzZWxlY3Rvci81L3NlbGVjdC92ZXJzaW9uLzIuMC9mb3JtYXQvanNvbi9tZWRpYXNldC9wYy92cGlkLyVz') % (vpid),
-                cacheTime = 0
-            )
-
-            id = GetMaxBitrateURL(stream_details, 'rtmp')
-
-            if not id in url:
-                url = url.replace(String.Decode("LC5tcDQuY3NtaWw_"), id + String.Decode("LC5tcDQuY3NtaWw_")).replace(String.Decode("Kn5obWFj"), id + String.Decode("Kn5obWFj"))
-
+            hls_url = url[ : url.rfind('/') + 1] + String.Decode("bWFzdGVyLm0zdTgNCg==")
+            headers = HTTP.Request(hls_url).headers
         except:
-            pass
+            try:
+                stream_details = JSON.ObjectFromURL(
+                    String.Decode('aHR0cDovL29wZW4ubGl2ZS5iYmMuY28udWsvbWVkaWFzZWxlY3Rvci81L3NlbGVjdC92ZXJzaW9uLzIuMC9mb3JtYXQvanNvbi9tZWRpYXNldC9wYy92cGlkLyVz') % (vpid),
+                    cacheTime = 0
+                )
+    
+                id = GetMaxBitrateURL(stream_details, 'rtmp')
+    
+                if not id in url:
+                    hls_url = url.replace(String.Decode("LC5tcDQuY3NtaWw_"), id + String.Decode("LC5tcDQuY3NtaWw_")).replace(String.Decode("Kn5obWFj"), id + String.Decode("Kn5obWFj"))
+    
+            except:
+                hls_url = url
     else:
         raise Ex.MediaNotAvailable
 
     if Client.Platform in HLS_CLIENTS:
         # These clients can handle HLS properly
         return IndirectResponse(
-            VideoClipObject, key=HTTPLiveStreamURL(url=url)
+            VideoClipObject, key=HTTPLiveStreamURL(url=hls_url)
         )
     else:
         # Other clients have problems if returning the original URL:
         # - Plex/Web: 'No playable sources found'
         # - Chromecast: PMS is selecting a low res variant when remuxing for CC
-        streams = GetHLSStreams(url)
+        streams = GetHLSStreams(hls_url)
 
         min_resolution_diff = 1000000000 # some huge number to get it started
-        url = streams[0]['url']
+        hls_url = streams[0]['url'] # Fallback url = max bitrate url
         
+        nearest_resolution = resolution
         for stream in streams:
             diff = abs(int(resolution) - stream['resolution'])
             
             if diff < min_resolution_diff:
                 min_resolution_diff = diff
-                url = stream['url']
+                nearest_resolution = stream['resolution']
+        
+        # Find url with highest bitrate for wanted resolution
+        # There are usually at least 3 different versions per resolution
+        # and the difference between them are the audio bitrate(96, 128, 320 etc)
+        # We'll always choose the highest audio bitrate variant
+        max_bitrate_found = 0
+        for stream in streams:
+            if nearest_resolution == stream['resolution']:
+                if stream['bitrate'] > max_bitrate_found:
+                    hls_url = stream['url']
                 
         return IndirectResponse(
-            VideoClipObject, key=HTTPLiveStreamURL(url=url)
+            VideoClipObject, key=HTTPLiveStreamURL(url=hls_url)
         )
 
 ####################################################################################################
