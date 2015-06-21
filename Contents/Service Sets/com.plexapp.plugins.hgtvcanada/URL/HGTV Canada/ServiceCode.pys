@@ -66,7 +66,12 @@ def MediaObjectsForURL(url):
             continue
         
         data = HTML.ElementFromURL(item['plfile$url'].replace("f4m", "m3u"))
-        video_url = data.xpath("//video/@src")[0]
+        
+        try:
+            video_url = data.xpath("//video/@src")[0]
+        except:
+            if 'GeoLocationBlocked' in HTML.StringFromElement(data):
+                raise Ex.MediaGeoblocked
         
         if Client.Platform in RAW_HLS_CLIENTS:
             parts = [PartObject(key=HTTPLiveStreamURL(url=video_url))]
