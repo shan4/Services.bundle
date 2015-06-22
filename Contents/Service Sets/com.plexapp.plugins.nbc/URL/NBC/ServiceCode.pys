@@ -67,8 +67,12 @@ def MetadataObjectForURL(url):
 				title = episode['title']
 				summary = episode['description']
 				duration = episode['totalDuration']
-				thumb = episode['images'][0]['images']['episode_banner']
 				originally_available_at = Datetime.FromTimestamp(episode['firstAiredDate']).date()
+
+				try:
+					thumb = episode['images'][0]['images']['episode_banner']
+				except:
+					thumb = ''
 
 				found_episode = True
 				break
