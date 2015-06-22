@@ -20,7 +20,12 @@ def MetadataObjectForURL(url):
 	if len(html.xpath('//*[contains(., "deleted")]')) > 0:
 		raise Ex.MediaNotAvailable
 
-	title = html.xpath('//h2[@class="video-title"]/text()')[0].strip()
+	title = html.xpath('//h2[@class="video-title"]/text()')
+
+	if len(title) < 1:
+		raise Ex.MediaNotAvailable
+
+	title = title[0].strip()
 	thumb = html.xpath('//span[@id="vplayer"]/img/@src')[0]
 
 	return VideoClipObject(
