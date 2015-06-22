@@ -12,7 +12,7 @@
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://(.+\.)?springboardplatform.com/mediaplayer/springboard/video/.+/[0-9]+/[0-9]+</string>
+				<string>^http://([^.]+\.)?springboardplatform.com/mediaplayer/springboard/video/.+/[0-9]+/[0-9]+</string>
 			</array>
 		</dict>
 	</dict>

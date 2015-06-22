@@ -14,7 +14,7 @@
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^https?://(.+\.)?blip\.tv/(((file|play)/([A-Za-z0-9%_+]){7,11}(\.html)?)|([^/]+/.+\-(\d{6,7})))</string>
+				<string>^https?://([^.]+\.)?blip\.tv/(((file|play)/([A-Za-z0-9%_+]){7,11}(\.html)?)|([^/]+/.+\-(\d{6,7})))</string>
 				<!-- This is for the 'Fallback' URL Service to match certain Blip embeds -->
 				<string>(^https?://blip.tv/scripts/flash/.+?file=)?https?://blip.tv/rss/flash/\d{7}</string>
 			</array>

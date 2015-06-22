@@ -14,7 +14,7 @@
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://(.+\.)?(freecaster.tv|extreme.com)/.+/[0-9]+/.+</string>
+				<string>^http://([^.]+\.)?(freecaster.tv|extreme.com)/.+/[0-9]+/.+</string>
 			</array>
 		</dict>
 	</dict>

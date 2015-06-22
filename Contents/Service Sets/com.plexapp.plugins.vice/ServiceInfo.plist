@@ -8,7 +8,7 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^https?://(.+\.)?vice\.com/.+</string>
+				<string>^https?://([^.]+\.)?vice\.com/.+</string>
 			</array>
 		</dict>
 	</dict>
