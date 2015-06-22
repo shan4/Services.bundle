@@ -51,7 +51,18 @@ def MediaObjectsForURL(url):
             continue
 
         data = HTML.ElementFromURL(url = episode['videoURL'] + '&manifest=m3u') 
-        video_url = data.xpath("//video/@src")[0]
+        video_url = data.xpath("//video/@src")
+
+        if len(video_url) < 1:
+            exception = data.xpath("//param[@name='exception']/@value")
+
+            if len(exception) < 1:
+                raise Ex.MediaNotAvailable
+            elif exception[0] == 'GeoLocationBlocked':
+                raise Ex.MediaGeoblocked
+            else:
+                raise Ex.MediaNotAvailable
+
         mo = []
 
         return [
@@ -64,7 +75,7 @@ def MediaObjectsForURL(url):
                             HTTPLiveStreamURL(
                                 Callback(
                                     PlayVideo,
-                                    url = video_url,
+                                    url = video_url[0],
                                     video_resolution = video_resolution
                                 )
                         )
