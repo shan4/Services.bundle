@@ -1,0 +1,103 @@
+RE_THUMB = Regex("image: '([^']+)'")
+
+####################################################################################################
+def NormalizeURL(url):
+
+	return url.split('?')[0]
+
+####################################################################################################
+def MetadataObjectForURL(url):
+
+	try:
+		data = HTTP.Request(url, cacheTime=CACHE_1DAY).content
+	except:
+		raise Ex.MediaNotAvailable
+
+	html = HTML.ElementFromString(data)
+
+	show = html.xpath('//meta[@property="og:title"]/@content')[0].split(' | ')[0].rsplit(' ',1)[0]
+	absolute_index = int(html.xpath('//meta[@property="og:title"]/@content')[0].split(' | ')[0].rsplit(' ',1)[1])
+
+	title = '%s %d' % (show, absolute_index)
+	summary = html.xpath('//h2[@class="subtitle"]/following-sibling::div[not(@class)][1]//text()')[0].strip()
+
+	try:
+		originally_available_at = html.xpath('//p[@class="air-date"]/text()')[0]
+		originally_available_at = Datetime.ParseDate(originally_available_at).date()
+	except:
+		originally_available_at = None
+
+	try:
+		thumb = RE_THUMB.search(data).group(1)
+	except:
+		thumb = html.xpath('//meta[@property="og:image"]/@content')[0]
+
+	return EpisodeObject(
+		show = show,
+		title = title,
+		absolute_index = absolute_index,
+		summary = summary,
+		originally_available_at = originally_available_at,
+		thumb = Resource.ContentsOfURLWithFallback(url=thumb)
+	)
+
+####################################################################################################
+def MediaObjectsForURL(url):
+
+	return [
+		MediaObject(
+			parts = [PartObject(key=Callback(PlayMedia, url=url, fmt='720'))],
+			video_resolution = '720',
+			container = Container.MP4,
+			video_codec = VideoCodec.H264,
+			audio_codec = AudioCodec.AAC,
+			audio_channels = 2,
+			optimized_for_streaming = True
+		),
+		MediaObject(
+			parts = [PartObject(key=Callback(PlayMedia, url=url, fmt='480'))],
+			video_resolution = '480',
+			container = Container.MP4,
+			video_codec = VideoCodec.H264,
+			audio_codec = AudioCodec.AAC,
+			audio_channels = 2,
+			optimized_for_streaming = True
+		)
+	]
+
+####################################################################################################
+@indirect
+def PlayMedia(url, fmt):
+
+	fmt = fmt.strip('p')
+	html = HTML.ElementFromURL(url, cacheTime=CACHE_1DAY)
+
+	resolutions = ['720', '480']
+	video_path = {
+		'720': '//a[contains(@href, "x720")]/@href',
+		'480': '//a[contains(@href, "x480")]/@href',
+		'sd' : '//a[contains(@href, ".mp4")]/@href'
+	}
+
+	index = resolutions.index(fmt)
+
+	for resolution_index in range(index, len(resolutions)):
+
+		current_resolution = resolutions[resolution_index]
+
+		try:
+			url = html.xpath(video_path[current_resolution])[0]
+			break
+		except:
+			# if this didn't work fall back to next resolution
+			continue
+
+	if 'twit.mediafly.com' in url:
+		url = url.replace('twit.mediafly.com', 'twit.cachefly.net')
+
+	url = url.strip()
+
+	if ' ' in url:
+		url = url.split(' ')[0]
+
+	return IndirectResponse(VideoClipObject, key=url)

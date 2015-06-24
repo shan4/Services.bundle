@@ -4,12 +4,11 @@
 <dict>
 	<key>URL</key>
 	<dict>
-		<key>TWiT.TV</key>
+		<key>TWiT</key>
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://twit\.tv/show/[^/]+/\d+</string>
-				<string>^http://twit\.tv/[^/]+/?\d+$</string>
+				<string>^https://twit\.tv/shows/[^/]+/episodes/\d+</string>
 			</array>
 		</dict>
 	</dict>
