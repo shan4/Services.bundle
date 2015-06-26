@@ -1,11 +1,13 @@
 NAMESPACES = {'media': 'http://search.yahoo.com/mrss/'}
 MRSS_URL = 'http://www.spike.com/feeds/mrss/?uri=%s&ref=www.spike.com'
 
+RE_TIMESTAMP = Regex('(\d+)H(\d+)M(\d+)S')
 RE_AMPERSANDS = Regex('&(?!amp;)')
 RE_RES_BIT = Regex('x(\d+)_(\d+)_?[^._]*\.(mp4|flv)')
 
 MediaObject.audio_channels = 2
 MediaObject.optimized_for_streaming = True
+
 ####################################################################################################
 def NormalizeURL(url):
 
@@ -23,12 +25,16 @@ def MetadataObjectForURL(url):
 	summary = html.xpath('//meta[@property="og:description"]/@content')[0]
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[0].split('?')[0]
 	duration = html.xpath('//meta[@itemprop="duration"]/@content')[0]
+
 	if duration:
-		# This duration can be blank or be T3M7S format
-		# But this is the only place to pull the duration on all pages without issues
-		duration = duration.replace('T', '').replace('S', '')
-		duration_1 = int(duration.split('M')[0]) * 60
-		duration = (duration_1 + int(duration.split('M')[1])) * 1000
+		ts = RE_TIMESTAMP.search(duration)
+		duration = 0
+
+		if ts:
+			duration += int(ts.group(1)) * 3600
+			duration += int(ts.group(2)) * 60
+			duration += int(ts.group(3))
+			duration = duration * 1000
 	else:
 		video_player_box = html.xpath('//div[@class="video_player"]')
 		if len(video_player_box) < 1:
@@ -80,9 +86,10 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 @deferred
 def MediaObjectsForURL(url):
+
     try: 
         data = HTML.ElementFromURL(url)
-        mgid = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//div[@class="video_player"]/@data-mgid')
+        mgid = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//div[contains(@class, "video_player")]/@data-mgid')
     except:
         raise Ex.MediaNotAvailable
 
