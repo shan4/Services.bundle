@@ -86,7 +86,7 @@ def PlayMedia(url, fmt):
 		current_resolution = resolutions[resolution_index]
 
 		try:
-			url = html.xpath(video_path[current_resolution])[0]
+			url = html.xpath(video_path[current_resolution])[-1]
 			break
 		except:
 			# if this didn't work fall back to next resolution
