@@ -144,7 +144,9 @@ def PlayVideo(url, res):
 def GetSMIL(url):
 
   try:
-    content = HTTP.Request(url).content.decode('utf8','replace')
+    content = HTTP.Request(url, follow_redirects=False).content.decode('utf8','replace')
+  except Ex.RedirectError, e:
+    raise Ex.MediaNotAvailable
   except:
     raise Ex.MediaExpired
 
