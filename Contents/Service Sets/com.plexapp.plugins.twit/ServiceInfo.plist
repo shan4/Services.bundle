@@ -8,7 +8,8 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^https://twit\.tv/shows/[^/]+/episodes/\d+</string>
+				<string>^https:\/\/twit\.tv\/shows\/[^/]+\/episodes\/\d+</string>
+				<string>^https?:\/\/twit\.tv\/[^/]+\/\d+</string>
 			</array>
 		</dict>
 	</dict>
