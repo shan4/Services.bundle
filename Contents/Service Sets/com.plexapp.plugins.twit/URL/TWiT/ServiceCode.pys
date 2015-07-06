@@ -67,7 +67,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayMedia(url, fmt):
+def PlayMedia(url, fmt, **kwargs):
 
 	fmt = fmt.strip('p')
 	html = HTML.ElementFromURL(url, cacheTime=CACHE_1DAY)

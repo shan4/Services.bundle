@@ -110,7 +110,7 @@ def MediaObjectsForURL(url):
     ]
 
 ####################################################################################################
-def PlayDirect(id):
+def PlayDirect(id, **kwargs):
     hls_url, subs_url = GetURLs(id)
     
     if hls_url and subs_url:
@@ -121,7 +121,7 @@ def PlayDirect(id):
    
 ####################################################################################################
 @indirect
-def PlayIndirect(id):
+def PlayIndirect(id, **kwargs):
     hls_url, subs_url = GetURLs(id)
     
     if hls_url and subs_url:

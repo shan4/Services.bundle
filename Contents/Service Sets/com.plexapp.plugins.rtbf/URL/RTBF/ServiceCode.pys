@@ -64,7 +64,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
   details = GetDetails(url)
   mp4_url = details['url']

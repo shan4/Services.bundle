@@ -55,7 +55,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, quality):
+def PlayVideo(url, quality, **kwargs):
 
   data = HTML.ElementFromURL(url)
   video_url = None

@@ -71,7 +71,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
     # Find the associated video items
     details_page = GetDetails(url)

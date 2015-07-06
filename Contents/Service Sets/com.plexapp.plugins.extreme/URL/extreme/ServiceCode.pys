@@ -69,7 +69,7 @@ def MediaObjectsForURL(url):
     ]
 
 ####################################################################################################
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
     info = GetVideoDetails(url)
 

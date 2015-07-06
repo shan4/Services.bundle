@@ -48,7 +48,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	video_id = url.split('/')[4]
 	json_obj = JSON.ObjectFromURL(MOOGALOOP_JSON % video_id)

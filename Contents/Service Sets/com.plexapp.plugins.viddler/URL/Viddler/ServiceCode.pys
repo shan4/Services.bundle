@@ -49,7 +49,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	video_id = url.rsplit('/',1)[1]
 

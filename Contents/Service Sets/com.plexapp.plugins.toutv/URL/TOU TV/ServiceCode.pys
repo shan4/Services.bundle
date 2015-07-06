@@ -114,7 +114,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, stream_type):
+def PlayVideo(url, stream_type, **kwargs):
     # Get the cookie and movie Url
     json = JSON.ObjectFromURL(url)
     movieUrl = json['url']

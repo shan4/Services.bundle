@@ -42,7 +42,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS)
 	video = html.xpath('//div[@class="videoplayer"]/@data-files')

@@ -28,7 +28,7 @@ def MediaObjectsForURL(url):
 	]
 
 ####################################################################################################
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	return Redirect(GetDetails(url)['FLVFullLengthURL'])
 

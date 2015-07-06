@@ -57,7 +57,7 @@ def CreateXmlUrl(url):
 	return url
 
 ####################################################################################################
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	url = CreateXmlUrl(url)
 	data = XML.ElementFromURL(url).xpath('//item')[0]

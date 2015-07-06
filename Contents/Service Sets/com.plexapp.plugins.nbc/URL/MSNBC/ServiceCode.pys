@@ -82,7 +82,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	video_id = RE_VIDEO_ID.findall(url)[-1]
 

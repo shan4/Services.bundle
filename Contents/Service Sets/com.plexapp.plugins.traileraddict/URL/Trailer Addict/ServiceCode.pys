@@ -77,7 +77,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	html = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR)
 	video_id = html.xpath('//meta[@name="twitter:player"]/@content')

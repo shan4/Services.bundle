@@ -33,7 +33,7 @@ def MediaObjectsForURL(url):
     ]
 
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
     smil = GetSMIL(url)
     source = smil.xpath('//a:video', namespaces=NAMESPACES)[0]
     player = smil.xpath('//a:meta', namespaces=NAMESPACES)[0].get('base')

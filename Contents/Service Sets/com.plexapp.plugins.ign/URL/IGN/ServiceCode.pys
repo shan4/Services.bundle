@@ -113,7 +113,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate):
+def PlayVideo(url, bitrate, **kwargs):
 
 	url = URLService.NormalizeURL(url)
 

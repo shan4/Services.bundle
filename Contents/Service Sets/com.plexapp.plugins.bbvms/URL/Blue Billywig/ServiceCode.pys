@@ -66,7 +66,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	xml_url = CreateXmlURL(url)
 	xml = XML.ElementFromURL(xml_url)

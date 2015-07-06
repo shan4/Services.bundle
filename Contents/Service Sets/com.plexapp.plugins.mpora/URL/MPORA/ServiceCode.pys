@@ -64,7 +64,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	if res == 'hd':
 		url = '%s?hd=1' % (url)

@@ -70,7 +70,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate=2500):
+def PlayVideo(url, bitrate=2500, **kwargs):
 
 	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS)
 	video = html.xpath('//meta[@property="og:video"]/@content')

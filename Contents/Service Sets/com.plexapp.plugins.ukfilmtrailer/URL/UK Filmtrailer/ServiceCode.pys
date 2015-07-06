@@ -102,7 +102,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	page_content = HTTP.Request(url).content
 	page = HTML.ElementFromString(page_content)

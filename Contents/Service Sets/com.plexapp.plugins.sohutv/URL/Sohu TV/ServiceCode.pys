@@ -246,7 +246,7 @@ def GetFormat(info, target_resolution):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, target_resolution):
+def PlayVideo(url, target_resolution, **kwargs):
 
 	Log.Debug("PlayVideo: url='%s', target_resolution='%s'", url, target_resolution)
 
@@ -265,7 +265,7 @@ def PlayVideo(url, target_resolution):
 
 ####################################################################################################
 @indirect
-def PlayLive(url):
+def PlayLive(url, **kwargs):
 
 	Log.Debug("PlayLive: url='%s'", url)
 

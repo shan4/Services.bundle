@@ -51,7 +51,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
     # The url should contain details of the actual media asset number.
     asset_id = RE_ASSED_ID.search(url).group('asset_id')

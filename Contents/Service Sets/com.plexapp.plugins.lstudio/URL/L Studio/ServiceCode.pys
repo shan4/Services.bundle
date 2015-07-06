@@ -65,7 +65,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt='hi'):
+def PlayVideo(url, fmt='hi', **kwargs):
 
 	url = 'http://www.lstudio.com/xml/videos-page/%s' % url.split('lstudio.com/')[-1].replace('.html', '.xml')
 	xml = XML.ElementFromURL(url, cacheTime=CACHE_1DAY)

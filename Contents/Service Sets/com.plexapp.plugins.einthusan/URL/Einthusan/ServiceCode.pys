@@ -64,7 +64,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	# Blu-ray quality movies require login, which we can't handle from the bookmarklet.
 	if 'bluray=true' in url:

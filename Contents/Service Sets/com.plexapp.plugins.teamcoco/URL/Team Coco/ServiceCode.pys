@@ -67,7 +67,7 @@ def MediaObjectsForURL(url):
 		]
 
 ####################################################################################################
-def PlayEpisode(url, res):
+def PlayEpisode(url, res, **kwargs):
 
 	if not '/full-episode-' in url:
 		raise Ex.MediaNotAvailable
@@ -125,7 +125,7 @@ def PlayEpisode(url, res):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res=720):
+def PlayVideo(url, res=720, **kwargs):
 
 	video_id = GetVideoId(url)
 

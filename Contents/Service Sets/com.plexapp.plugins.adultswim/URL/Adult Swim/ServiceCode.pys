@@ -85,7 +85,7 @@ def MediaObjectsForURL(url):
 	]
 
 ####################################################################################################
-def PlayVideo(url, index=0):
+def PlayVideo(url, index=0, **kwargs):
 
 	details = GetDetails(url)
 	stream_ids = details.xpath('//item[@name="segIds"]/value')[0].text.split('#')

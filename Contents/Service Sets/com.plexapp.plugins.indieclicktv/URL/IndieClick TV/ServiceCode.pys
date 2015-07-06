@@ -43,7 +43,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	xml = GetXML(url)
 	video_url = xml.xpath('//media/property[@name="media"]/@value')[0]

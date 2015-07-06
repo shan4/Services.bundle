@@ -50,7 +50,7 @@ def MediaObjectsForURL(url):
 	]
 
 ####################################################################################################
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	# The url will have been originally normalized to remove any quality setting. We should add it
 	# back, based upon the specified resolution.

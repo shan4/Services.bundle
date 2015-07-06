@@ -106,7 +106,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
   try:
     # Not all input URLs are full URLs, grab the full URL

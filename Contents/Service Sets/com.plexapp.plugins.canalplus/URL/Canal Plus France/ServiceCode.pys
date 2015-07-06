@@ -57,7 +57,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, quality):
+def PlayVideo(url, quality, **kwargs):
 
 	index = QUALITIES.index(quality)
 	data = GetXML(url)

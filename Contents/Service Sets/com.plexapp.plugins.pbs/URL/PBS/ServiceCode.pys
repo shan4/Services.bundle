@@ -51,7 +51,7 @@ def MediaObjectsForURL(url):
     ]
 
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
     video_url = None
     tp_id = RE_TP_ID.search(url).group(1)
     video = PBS(String.Decode(API_ID), String.Decode(API_SECRET)).videos.get(DETAILS + tp_id)

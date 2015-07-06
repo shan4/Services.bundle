@@ -53,7 +53,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt):
+def PlayVideo(url, fmt, **kwargs):
 
 	# Keep some of the old 'fmt' names for videos already queued
 	if fmt in ('hd', '720p'):

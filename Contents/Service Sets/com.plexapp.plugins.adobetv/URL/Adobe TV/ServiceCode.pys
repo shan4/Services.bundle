@@ -110,7 +110,7 @@ def TimeToMs(timecode):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url=None, fmt='HD'):
+def PlayVideo(url=None, fmt='HD', **kwargs):
 
 	if not url:
 		return None

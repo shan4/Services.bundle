@@ -126,7 +126,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, resolution):
+def PlayVideo(url, resolution, **kwargs):
 
 	video = None
 	data_url = XML_URL % url.split('/?/video/')[1]

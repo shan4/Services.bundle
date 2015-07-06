@@ -115,7 +115,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayMedia(slug=None, url=None):
+def PlayMedia(slug=None, url=None, **kwargs):
 
 	if slug:
 

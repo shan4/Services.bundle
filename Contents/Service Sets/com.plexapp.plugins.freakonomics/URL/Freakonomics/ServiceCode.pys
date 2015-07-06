@@ -43,7 +43,7 @@ def MediaObjectsForURL(url):
 	]
 
 ####################################################################################################
-def PlayAudio(url):
+def PlayAudio(url, **kwargs):
 
 	data = HTML.ElementFromURL(url)
 	media_url = data.xpath('//a[@title="Play in new window"]')

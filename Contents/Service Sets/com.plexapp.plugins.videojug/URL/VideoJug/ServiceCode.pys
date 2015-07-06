@@ -64,7 +64,7 @@ def MediaObjectsForURL(url):
     ]
 
 ####################################################################################################
-def PlayVideo(url, file_ext):
+def PlayVideo(url, file_ext, **kwargs):
 
     html = HTML.ElementFromURL(url)
 

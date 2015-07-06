@@ -46,7 +46,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	id = RE_ID.findall(url)[0]
 	json_obj = JSON.ObjectFromURL(API_URL % id, headers=HTTP_HEADERS)

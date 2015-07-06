@@ -48,7 +48,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt='720'):
+def PlayVideo(url, fmt='720', **kwargs):
 
 	json_obj = GetJSON(url)
 

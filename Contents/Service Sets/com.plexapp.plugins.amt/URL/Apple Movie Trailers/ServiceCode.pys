@@ -83,7 +83,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt=None):
+def PlayVideo(url, fmt=None, **kwargs):
 
 	if fmt is None or url.split('.')[-1] in ('mov', 'm4v', 'mp4'):
 		return None

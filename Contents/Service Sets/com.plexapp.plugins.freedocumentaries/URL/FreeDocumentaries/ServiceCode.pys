@@ -48,7 +48,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt=None):
+def PlayVideo(url, fmt=None, **kwargs):
 
 	data = HTTP.Request(url).content
 	docid = RE_DOCID.search(data)

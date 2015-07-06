@@ -30,7 +30,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
     pageElement = HTML.ElementFromURL(url, cacheTime = 0)
     data        = pageElement.xpath("//*[contains(@class,'jsb_VideoPlaylist')]")[0].get('data-jsb')
     json_data   = JSON.ObjectFromString(data)

@@ -58,7 +58,7 @@ def MediaObjectsForURL(url):
     ]
 
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
     details = GetDetails(url)
     smil_url = details['media$content'][0]['plfile$releases'][0]['plrelease$url']
     smil = XML.ElementFromURL(smil_url)

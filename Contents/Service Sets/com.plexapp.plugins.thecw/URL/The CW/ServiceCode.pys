@@ -92,7 +92,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate):
+def PlayVideo(url, bitrate, **kwargs):
 
 	available_bitrates = []
 	rtmp_url = None

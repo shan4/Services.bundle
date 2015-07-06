@@ -76,7 +76,7 @@ def MediaObjectsForURL(url):
 		raise Ex.MediaNotAvailable
 
 ####################################################################################################
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	try:
 		playlist = HTTP.Request(url).content

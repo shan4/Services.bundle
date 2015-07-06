@@ -56,7 +56,7 @@ def MediaObjectsForURL(url):
   ]
 
 ####################################################################################################
-def PlayVideo(url, fmt=''):
+def PlayVideo(url, fmt='', **kwargs):
 
   photo_id = RE_PHOTO_ID.match(url).groupdict()['id']
   data = HTML.ElementFromURL(url, headers=httpHeaders)

@@ -64,7 +64,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res='720'):
+def PlayVideo(url, res='720', **kwargs):
 
 	page = HTML.ElementFromURL(url)
 	show = page.xpath('//title')[0].text.rsplit(' | ', 1)[1].strip().lower()

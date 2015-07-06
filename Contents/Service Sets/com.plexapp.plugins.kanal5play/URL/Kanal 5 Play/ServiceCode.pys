@@ -115,7 +115,7 @@ def MediaObjectsForURL(url):
 		]
 
 ####################################################################################################
-def PlayHLS(url):
+def PlayHLS(url, **kwargs):
 	details = GetDetails(url, 'IPAD')
 
 	if not 'streams' in details:
@@ -157,7 +157,7 @@ def PlayHLS(url):
 
 ####################################################################################################
 @indirect
-def PlayRTMP(url):
+def PlayRTMP(url, **kwargs):
 	details = GetDetails(url, 'FLASH')
 
 	if not 'streams' in details:

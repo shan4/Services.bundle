@@ -45,7 +45,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
   content = HTTP.Request(url).content
   video_url = content.split("'file=")[1].split("&")[0]
   #Log(video_url)

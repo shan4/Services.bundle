@@ -76,7 +76,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	rss_url = CreateRssURL(url)
 	cnti_key = rss_url.split('#')[1]

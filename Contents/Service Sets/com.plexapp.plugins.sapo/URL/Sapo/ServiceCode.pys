@@ -36,7 +36,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	data = HTML.ElementFromURL(url)
 	video = data.xpath('//meta[@property="og:video"]')[0].get('content')

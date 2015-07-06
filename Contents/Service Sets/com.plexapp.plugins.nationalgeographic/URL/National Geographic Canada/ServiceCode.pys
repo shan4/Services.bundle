@@ -39,7 +39,7 @@ def MediaObjectsForURL(url):
 	]
 
 ####################################################################################################
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	data = XML.ElementFromURL(PlatformURL(url))
 

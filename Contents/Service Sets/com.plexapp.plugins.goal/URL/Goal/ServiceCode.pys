@@ -76,7 +76,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate):
+def PlayVideo(url, bitrate, **kwargs):
 
 	video_data = GetVideoXML(url)
 

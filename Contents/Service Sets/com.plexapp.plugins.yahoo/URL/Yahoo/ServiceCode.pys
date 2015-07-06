@@ -84,7 +84,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate):
+def PlayVideo(url, bitrate, **kwargs):
 
 	available_bitrates = []
 	streams = GetJSON(url)['streams']

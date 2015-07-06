@@ -46,7 +46,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt=None):
+def PlayVideo(url, fmt=None, **kwargs):
 
 	# Obtain the id of the video
 	html = HTML.ElementFromURL(url)

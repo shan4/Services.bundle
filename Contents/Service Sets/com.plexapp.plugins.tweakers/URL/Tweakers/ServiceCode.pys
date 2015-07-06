@@ -45,7 +45,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res=1080):
+def PlayVideo(url, res=1080, **kwargs):
 
 	video_id = url.split('/video/')[-1].split('/')[0]
 	xml = XML.ElementFromURL(XSPF_URL % (video_id))

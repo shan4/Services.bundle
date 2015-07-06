@@ -53,7 +53,7 @@ def MediaObjectsForURL(url):
   ]
 
 ####################################################################################################
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
   page = HTTP.Request(url).content
   id = re.search("showVideo\('([^']+)','([^']+)'", page)

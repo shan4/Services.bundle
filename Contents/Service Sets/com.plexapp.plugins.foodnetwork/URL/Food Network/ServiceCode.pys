@@ -45,7 +45,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate=3000):
+def PlayVideo(url, bitrate=3000, **kwargs):
 
 	json_obj = GetJSON(url)
 	smil_url = json_obj['releaseUrl'].split('?')[0]

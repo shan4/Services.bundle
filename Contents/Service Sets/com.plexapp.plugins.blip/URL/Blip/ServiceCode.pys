@@ -162,7 +162,7 @@ def GetJson(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	try:
 		h = HTTP.Request(url, follow_redirects=False, headers={'Referer': 'http://web-sniffer.net/', 'User-Agent': 'Web-sniffer/1.1.0 (+http://web-sniffer.net/)', 'Range': 'bytes=0-1'}).content

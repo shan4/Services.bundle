@@ -81,7 +81,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url=None):
+def PlayVideo(url=None, **kwargs):
     type, assetId = GetTypeAssetIdFromURL(url)
     if(type == None):
         Log('Not a valid URL')

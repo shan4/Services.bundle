@@ -54,7 +54,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res):
+def PlayVideo(url, res, **kwargs):
 
 	try:
 		data = HTTP.Request(url, cacheTime=300).content

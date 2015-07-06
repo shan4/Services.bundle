@@ -117,7 +117,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayRecorded(url):
+def PlayRecorded(url, **kwargs):
 
 	if not '/recorded/' in url:
 		raise Ex.MediaNotAvailable
@@ -135,7 +135,7 @@ def PlayRecorded(url):
 		raise Ex.MediaNotAvailable
 
 ####################################################################################################
-def PlayLive(url):
+def PlayLive(url, **kwargs):
 
 	try:
 		html = HTML.ElementFromURL(url)

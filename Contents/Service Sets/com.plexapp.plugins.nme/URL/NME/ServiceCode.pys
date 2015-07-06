@@ -27,7 +27,7 @@ def GetBrightCoveURL(url):
 	return BC_URL % (player_id, video_id)
 
 ####################################################################################################
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	media = URLService.MediaObjectsForURL(url)
 

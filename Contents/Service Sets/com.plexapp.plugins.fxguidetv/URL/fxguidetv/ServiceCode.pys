@@ -64,7 +64,7 @@ def MediaObjectsForURL(url):
 		]
 
 ####################################################################################################
-def PlayVideo(url, res=None):
+def PlayVideo(url, res=None, **kwargs):
 
 	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS, cacheTime=CACHE_1WEEK)
 	content_url = html.xpath('//div[@class="single-podcast-actions"]/a/@href')

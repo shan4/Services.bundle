@@ -58,7 +58,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, fmt='high'):
+def PlayVideo(url, fmt='high', **kwargs):
 
 	# This URL Service is meant for publicly available videos. If somehow this service is used
 	# with an API key in the URL, ignore it.

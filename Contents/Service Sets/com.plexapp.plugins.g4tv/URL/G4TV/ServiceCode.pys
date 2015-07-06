@@ -59,7 +59,7 @@ def MediaObjectsForURL(url):
   ]
 
 ####################################################################################################
-def PlayVideo(url, HD=False):
+def PlayVideo(url, HD=False, **kwargs):
 
   data = GetXML(url)
 

@@ -28,7 +28,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	video_id = url.split('/')[4]
 	video_url = 'http://cdn.videos.snotr.com/%s.flv' % (video_id)

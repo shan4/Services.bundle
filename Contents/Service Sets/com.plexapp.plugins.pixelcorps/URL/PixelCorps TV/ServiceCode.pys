@@ -7,17 +7,21 @@ SHOWS_MOV = ["gear_media_tech", "gmt", "ITBB", "itbb", "macbreak", "macbreak_dev
 
 ####################################################################################################
 def MetadataObjectForURL(url):
+
     media_type = GetMediaType(url)
 
     data = HTML.ElementFromURL(url)
     details = data.xpath('//div[@id="content"]')[0]
     clip_title = details.xpath('.//h2[@class="title podcast"]')[0].text
+
     try:
         title = details.xpath('.//h2[@class="page-title"]')[0].text
         title = "%s - %s" % (title, clip_title)    
     except:
         title = clip_title
+
     runtime = details.xpath('.//div[@class="running-time"]/text()')[0].split(':')
+
     if len(runtime) == 3:
         duration = (int(runtime[0])*3600 + int(runtime[1])*60 + int(runtime[2]))*1000
     elif len(runtime) == 2:
@@ -26,6 +30,7 @@ def MetadataObjectForURL(url):
         duration = (int(runtime[1]))*1000
     else:
         duration = None
+
     date = Datetime.ParseDate(details.xpath('.//h3[@class="podcast-date"]')[0].text).date()
     summary = details.xpath('.//p')[1].text
 
@@ -35,17 +40,19 @@ def MetadataObjectForURL(url):
             duration = duration,
             originally_available_at = date,
             summary = summary)
+
     elif media_type == "MP3":
         c = TrackObject(
             title = title,
             duration = duration,
             #originally_available_at = date,
-            summary = summary
-            )
+            summary = summary)
+
     return c
 
 ####################################################################################################
 def MediaObjectsForURL(url):
+
     media_type = GetMediaType(url)
 
     if media_type == "MOV":
@@ -60,6 +67,7 @@ def MediaObjectsForURL(url):
                 parts = [PartObject(key=Callback(PlayMedia, url = url))]
                 )
             ]
+
     elif media_type == "MP3":
         return [
             MediaObject(
@@ -71,23 +79,29 @@ def MediaObjectsForURL(url):
             ]
 
 ####################################################################################################
-def PlayMedia(url):
+def PlayMedia(url, **kwargs):
+
     data = HTML.ElementFromURL(url)
     media_url = data.xpath('//div[@class="download"]/a')[0].get('href')
+
     return Redirect(media_url)
 
 ####################################################################################################
 def GetMediaType(url):
+
     ### compare url to list of known media types for the different shows on PixelCorps ###
     show = url.split('/')[-1]
+
     for possible in SHOWS_MOV:
         if show.startswith(possible):
             return "MOV"
         else:
             pass
+
     for possible in SHOWS_MP3:
         if show.startswith(possible):
             return "MP3"
         else:
             pass
+
     return

@@ -42,7 +42,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
     # Request the url and identify the episode number
     page = HTML.ElementFromURL(url)

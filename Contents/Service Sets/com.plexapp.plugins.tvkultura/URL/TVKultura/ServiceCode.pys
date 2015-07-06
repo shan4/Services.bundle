@@ -40,7 +40,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url):
+def PlayVideo(url, **kwargs):
 
 	json_obj = GetJSON(url)
 	video_url = json_obj['sources']['m3u8']['auto']

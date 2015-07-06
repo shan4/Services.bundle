@@ -80,7 +80,7 @@ def GetTrackId(url):
 	return track_id
 
 ####################################################################################################
-def PlayTrack(url):
+def PlayTrack(url, **kwargs):
 
 	track_id = GetTrackId(url)
 	return Redirect(MP3_URL % track_id)
