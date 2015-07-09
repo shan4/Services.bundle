@@ -39,7 +39,7 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, **kwargs):
 
 	data = HTML.ElementFromURL(url)
-	video = data.xpath('//meta[@property="og:video"]')[0].get('content')
+	video = data.xpath('//meta[@property="og:video:url"]/@content')[0]
 
 	if len(video) < 1:
 		raise Ex.MediaNotAvailable
