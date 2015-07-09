@@ -1,3 +1,6 @@
+import time
+
+
 RE_FILE = Regex('file: "([^"]+\.(?:mp4|flv))"')
 
 ####################################################################################################
@@ -17,6 +20,18 @@ def MetadataObjectForURL(url):
 	except:
 		raise Ex.MediaNotAvailable
 
+	post_values = {}
+
+	for item in html.xpath('//form[@method="POST"]/input'):
+
+		name = item.get('name')
+		value = item.get('value')
+		post_values[name] = value
+
+	time.sleep(5)
+
+	html = HTML.ElementFromURL(url, values=post_values, method='POST')
+
 	if len(html.xpath('//*[contains(., "deleted")]')) > 0:
 		raise Ex.MediaNotAvailable
 
@@ -27,6 +42,7 @@ def MetadataObjectForURL(url):
 
 	title = title[0].strip()
 	thumb = html.xpath('//span[@id="vplayer"]/img/@src')[0]
+
 
 	return VideoClipObject(
 		title = title,
@@ -50,7 +66,18 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, **kwargs):
 
-	page = HTTP.Request(url).content
+	html = HTML.ElementFromURL(url)
+	post_values = {}
+
+	for item in html.xpath('//form[@method="POST"]/input'):
+
+		name = item.get('name')
+		value = item.get('value')
+		post_values[name] = value
+
+	time.sleep(5)
+
+	page = HTTP.Request(url, values=post_values, method='POST').content
 
 	file = RE_FILE.search(page)
 
