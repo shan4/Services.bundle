@@ -27,7 +27,7 @@ def MetadataObjectForURL(url):
 	duration = html.xpath('//meta[@itemprop="duration"]/@content')
 
 	if len(duration) > 1 and duration:
-		ts = RE_TIMESTAMP.search(duration)
+		ts = RE_TIMESTAMP.search(duration[0])
 		duration = 0
 
 		if ts:
