@@ -8,7 +8,7 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://video.adultswim.com/.+</string>
+				<string>^http:\/\/www\.adultswim\.com\/videos\/[^/]+/.+</string>
 			</array>
 		</dict>
 	</dict>
