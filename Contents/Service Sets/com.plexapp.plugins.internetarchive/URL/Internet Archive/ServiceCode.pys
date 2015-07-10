@@ -1,6 +1,11 @@
 INTERNET_ARCHIVE_LOGO = "http://bib.archive.org/files/2011/09/archive-logo-notext-300x300.png"
 
 ####################################################################################################
+def NormalizeURL(url):
+
+    return url.strip('#')
+
+####################################################################################################
 def MetadataObjectForURL(url):
 
     json_url = url
