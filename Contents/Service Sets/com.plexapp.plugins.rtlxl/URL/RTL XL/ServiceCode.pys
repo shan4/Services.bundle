@@ -1,5 +1,5 @@
 XL_URL = 'http://www.rtlxl.nl/#!/u/%s'
-XL_DATA_URL = 'http://www.rtl.nl/system/s4m/xldata/ux/%s?context=rtlxl&d=pc&ive&version=3&fmt=adaptive'
+XL_DATA_URL = 'http://www.rtl.nl/system/s4m/xldata/ux/%s?context=rtlxl&d=%s&ive&version=3&fmt=%s'
 
 THUMB_URL = 'http://data.rtl.nl/system/img//%s.jpg'
 
@@ -25,7 +25,7 @@ def MetadataObjectForURL(url):
 	if not uuid:
 		raise Ex.MediaNotAvailable
 
-	data_url = XL_DATA_URL % uuid.group('uuid')
+	data_url = XL_DATA_URL % (uuid.group('uuid'), 'pc', 'adaptive')
 	material_node = XML.ElementFromURL(data_url, headers=HTTP_HEADERS_DESKTOP, encoding='iso-8859-1').xpath('//material[@key="%s"]' % uuid.group('uuid'))
 
 	if len(material_node) < 1:
@@ -72,41 +72,64 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 def MediaObjectsForURL(url):
 
-	return [
-		MediaObject(
-			video_resolution = 'sd',
-			audio_channels = 2,
-			optimized_for_streaming = True,
-			parts = [
-				PartObject(
-					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url))
-				)
-			]
-		)
-	]
+	if Client.Platform in ['iOS', 'Android', 'Roku', 'Safari']:
+
+		return [
+			MediaObject(
+				video_resolution = '720',
+				audio_channels = 2,
+				optimized_for_streaming = True,
+				parts = [
+					PartObject(
+						key = HTTPLiveStreamURL(Callback(PlayVideo, url=url, hls=True))
+					)
+				]
+			)
+		]
+
+	else:
+
+		return [
+			MediaObject(
+				container = Container.MP4,
+				video_codec = VideoCodec.H264,
+				audio_codec = AudioCodec.AAC,
+				video_resolution = 'sd',
+				audio_channels = 2,
+				optimized_for_streaming = True,
+				parts = [
+					PartObject(
+						key = HTTPLiveStreamURL(Callback(PlayVideo, url=url, hls=False))
+					)
+				]
+			)
+		]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, **kwargs):
+def PlayVideo(url, hls=True, **kwargs):
 
 	uuid = RE_UUID.search(url)
 	if not uuid:
 		raise Ex.MediaNotAvailable
 
-	data_url = XL_DATA_URL % uuid.group('uuid')
-	
+	if hls:
+		data_url = XL_DATA_URL % (uuid.group('uuid'), 'pc', 'adaptive')
+	else:
+		data_url = XL_DATA_URL % (uuid.group('uuid'), 'a2t', 'progressive')
+
 	material_node = XML.ElementFromURL(data_url, headers=HTTP_HEADERS_DESKTOP, encoding='iso-8859-1').xpath('//material[@key="%s"]' % uuid.group('uuid'))
 
 	if len(material_node) < 1:
 		raise Ex.MediaNotAvailable
 	else:
 		data = material_node[0]
-	
+
 	try:
-		urls = data.xpath('./playlist[@type="vod"]/sources/ref[@type="adaptive"]')[0]
-		url = urls.xpath('./@host')[0]+urls.xpath('./@href')[0]
-	
+		urls = data.xpath('./playlist[@type="vod"]/sources/ref[@type]')[0]
+		url = urls.xpath('./@host')[0] + urls.xpath('./@href')[0]
+
 		return IndirectResponse(VideoClipObject, key=url)
-	
+
 	except: 
 		raise Ex.MediaNotAvailable
