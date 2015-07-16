@@ -145,49 +145,57 @@ def MediaObjectsForURL(url):
                     key = Callback(PlayVideo, post_url=media_selector_url, media_selector_url=media_selector_url, vpid=vpid, resolution=resolution, ext='m3u8')
                 )
             ]
-        ) for resolution in ['1080', '720', '540', '396', '288', '216', '144', '108']
+        ) for resolution in ['1080', '720', '540', '396', '288']
     ]
 
 ####################################################################################################
 @indirect
-def PlayVideo(media_selector_url='', vpid='', resolution='', **kwargs):
+def PlayVideo(media_selector_url='', vpid='', resolution='1080', **kwargs):
 
     if media_selector_url == '':
         raise Ex.MediaNotAvailable
 
-    if not resolution:
-        resolution = '1080'
-    
     try:
-        stream_details = JSON.ObjectFromURL(media_selector_url, cacheTime=0)
+        stream_details = HTTP.Request(media_selector_url, cacheTime=0).content
+        stream_details = JSON.ObjectFromString(stream_details)
     except:
         raise Ex.MediaGeoblocked
 
     url = GetMaxBitrateURL(stream_details, 'hls')
     hls_url = None
+    geoblock = False
 
     if url:
+        hls_url = url[ : url.rfind('/') + 1] + String.Decode("bWFzdGVyLm0zdTgNCg==")
+
         try:
-            hls_url = url[ : url.rfind('/') + 1] + String.Decode("bWFzdGVyLm0zdTgNCg==")
             headers = HTTP.Request(hls_url).headers
+
+        except Ex.HTTPError, e:
+            if e.code == 403:
+                hls_url = url
+                geoblock = True
+            else:
+                raise Ex.MediaNotAvailable
+
         except:
             try:
                 stream_details = JSON.ObjectFromURL(
                     String.Decode('aHR0cDovL29wZW4ubGl2ZS5iYmMuY28udWsvbWVkaWFzZWxlY3Rvci81L3NlbGVjdC92ZXJzaW9uLzIuMC9mb3JtYXQvanNvbi9tZWRpYXNldC9wYy92cGlkLyVz') % (vpid),
                     cacheTime = 0
                 )
-    
+
                 id = GetMaxBitrateURL(stream_details, 'rtmp')
-    
+
                 if not id in url:
                     hls_url = url.replace(String.Decode("LC5tcDQuY3NtaWw_"), id + String.Decode("LC5tcDQuY3NtaWw_")).replace(String.Decode("Kn5obWFj"), id + String.Decode("Kn5obWFj"))
-    
+
             except:
                 hls_url = url
     else:
         raise Ex.MediaNotAvailable
 
-    if Client.Platform in HLS_CLIENTS:
+    if Client.Platform in HLS_CLIENTS or geoblock:
         # These clients can handle HLS properly
         return IndirectResponse(
             VideoClipObject, key=HTTPLiveStreamURL(url=hls_url)
@@ -200,15 +208,15 @@ def PlayVideo(media_selector_url='', vpid='', resolution='', **kwargs):
 
         min_resolution_diff = 1000000000 # some huge number to get it started
         hls_url = streams[0]['url'] # Fallback url = max bitrate url
-        
+
         nearest_resolution = resolution
         for stream in streams:
             diff = abs(int(resolution) - stream['resolution'])
-            
+
             if diff < min_resolution_diff:
                 min_resolution_diff = diff
                 nearest_resolution = stream['resolution']
-        
+
         # Find url with highest bitrate for wanted resolution
         # There are usually at least 3 different versions per resolution
         # and the difference between them are the audio bitrate(96, 128, 320 etc)
@@ -218,7 +226,7 @@ def PlayVideo(media_selector_url='', vpid='', resolution='', **kwargs):
             if nearest_resolution == stream['resolution']:
                 if stream['bitrate'] > max_bitrate_found:
                     hls_url = stream['url']
-                
+
         return IndirectResponse(
             VideoClipObject, key=HTTPLiveStreamURL(url=hls_url)
         )
@@ -229,16 +237,23 @@ def GetMaxBitrateURL(stream_details, transfer_format):
     max_bitrate_found = 0
     url = None
 
+    if 'media' not in stream_details:
+        return url
+
     for media in stream_details['media']:
+
         if media['kind'] == 'video':
             if int(media['bitrate']) > max_bitrate_found:
+
                 for connection in media['connection']:
                     if 'akamai' in connection['supplier']:
+
                         if transfer_format == 'hls':
                             if 'transferFormat' in connection:
                                 if 'hls' in connection['transferFormat']:
                                     url = connection['href']
                                     max_bitrate_found = int(media['bitrate'])
+
                         else:
                             if 'protocol' in connection:
                                 if 'rtmp' in connection['protocol']:
@@ -247,8 +262,9 @@ def GetMaxBitrateURL(stream_details, transfer_format):
 
     return url
 
-###########################################################
+####################################################################################################
 def GetHLSStreams(url):
+
     streams = []
 
     playList = HTTP.Request(url).content
@@ -269,14 +285,14 @@ def GetHLSStreams(url):
 
         elif ".m3u8" in line:
             path = ''
-            
+
             if not line.startswith("http"):
                 path = url[ : url.rfind('/') + 1]
-                
+
             stream["url"] = path + line
-                    
+
             streams.append(stream)
-                
+
     sorted_streams = sorted(streams, key = lambda stream: stream["bitrate"], reverse = True)        
 
     return sorted_streams
