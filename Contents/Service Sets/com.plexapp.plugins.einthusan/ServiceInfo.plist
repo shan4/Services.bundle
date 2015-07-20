@@ -8,7 +8,7 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^(?!.*bluray=true)http://www.einthusan.com/(movies/)?watch.php\?.*?id=\d+</string>
+				<string>^(?!.*bluray=true)http:\/\/(www\.)?einthusan\.com\/(movies\/)?watch\.php\?.*?id=\d+</string>
 			</array>
 		</dict>
 	</dict>
