@@ -1,5 +1,4 @@
-JSON_URL = 'http://video.query.yahoo.com/v1/public/yql?q=%s&env=prod&format=json'
-QUERY = 'SELECT * FROM yahoo.media.video.streams WHERE id="%s" AND format="mp4" AND protocol="http" AND plrs="" AND region="%s";'
+JSON_URL = 'https://video.media.yql.yahoo.com/v1/video/sapi/streams/%s?protocol=http&region=%s'
 RESOLUTIONS = [1080, 720, 540, 480, 360]
 BITRATES = [4000, 3000, 2000, 1500, 1000]
 
@@ -143,7 +142,7 @@ def GetJSON(url, content_id=None):
 	else:
 		region = url.split('/')[2].split('.')[0].upper()
 
-	json_url = JSON_URL % String.Quote(QUERY % (content_id, region), usePlus=False)
+	json_url = JSON_URL % (content_id, region)
 
 	try:
 		json_data = HTTP.Request(json_url, cacheTime=0).content
