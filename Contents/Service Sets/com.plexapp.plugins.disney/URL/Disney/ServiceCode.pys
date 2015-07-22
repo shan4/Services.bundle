@@ -81,10 +81,15 @@ def PlayVideo(url, **kwargs):
 def GetJSON(url):
 
 	host = url.split('/')[2]
-	path = url.split('/watch/')[-1]
+	path = url.rsplit('/')[-1]
+
+	url = JSON_URL % (host, path)
+
+	if host == 'disneyjunior.disney.com':
+		url = url.replace('/watch/', '/')
 
 	try:
-		json = JSON.ObjectFromURL(JSON_URL % (host, path))
+		json = JSON.ObjectFromURL(url)
 		return json['stack'][0]['data'][0]
 	except:
 		return None
