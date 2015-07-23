@@ -129,7 +129,7 @@ def MediaObjectsForURL(url):
     except:
         raise Ex.MediaNotAvailable
 
-    media_selector_url = String.Decode('aHR0cDovL29wZW4ubGl2ZS5iYmMuY28udWsvbWVkaWFzZWxlY3Rvci81L3NlbGVjdC92ZXJzaW9uLzIuMC9mb3JtYXQvanNvbi9tZWRpYXNldC9hcHBsZS1pcGFkLWhscy92cGlkLyVz') % (vpid)
+    media_selector_url = 'http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/format/json/mediaset/apple-ipad-hls/vpid/%s' % (vpid)
 
     return [
         MediaObject(
@@ -166,7 +166,7 @@ def PlayVideo(media_selector_url='', vpid='', resolution='1080', **kwargs):
     geoblock = False
 
     if url:
-        hls_url = url[ : url.rfind('/') + 1] + String.Decode("bWFzdGVyLm0zdTgNCg==")
+        hls_url = '%s/master.m3u8' % (url[:url.rfind('/')])
 
         try:
             headers = HTTP.Request(hls_url).headers
@@ -180,15 +180,12 @@ def PlayVideo(media_selector_url='', vpid='', resolution='1080', **kwargs):
 
         except:
             try:
-                stream_details = JSON.ObjectFromURL(
-                    String.Decode('aHR0cDovL29wZW4ubGl2ZS5iYmMuY28udWsvbWVkaWFzZWxlY3Rvci81L3NlbGVjdC92ZXJzaW9uLzIuMC9mb3JtYXQvanNvbi9tZWRpYXNldC9wYy92cGlkLyVz') % (vpid),
-                    cacheTime = 0
-                )
+                stream_details = JSON.ObjectFromURL('http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/format/json/mediaset/pc/vpid/%s' % (vpid), cacheTime=0)
 
                 id = GetMaxBitrateURL(stream_details, 'rtmp')
 
                 if not id in url:
-                    hls_url = url.replace(String.Decode("LC5tcDQuY3NtaWw_"), id + String.Decode("LC5tcDQuY3NtaWw_")).replace(String.Decode("Kn5obWFj"), id + String.Decode("Kn5obWFj"))
+                    hls_url = url.replace(',.mp4.csmil', id + ',.mp4.csmil').replace('*~hmac', id + '*~hmac')
 
             except:
                 hls_url = url
@@ -257,7 +254,7 @@ def GetMaxBitrateURL(stream_details, transfer_format):
                         else:
                             if 'protocol' in connection:
                                 if 'rtmp' in connection['protocol']:
-                                    url = connection['identifier'].replace(String.Decode("bXA0OmlwbGF5ZXJzdHJlYW0vc2VjdXJlX2F1dGgv"), ",").replace(String.Decode("Lm1wNA=="), "").replace(String.Decode("bXA0OnNlY3VyZS8="), ",")
+                                    url = connection['identifier'].replace('mp4:iplayerstream/secure_auth/', ',').replace('.mp4', '').replace('mp4:secure/', ',')
                                     max_bitrate_found = int(media['bitrate'])
 
     return url
@@ -274,26 +271,26 @@ def GetHLSStreams(url):
     # - Resolution
     # - Bitrate
     for line in playList.splitlines():
-        if "BANDWIDTH" in line:
-            stream            = {}
-            stream["bitrate"] = int(Regex('(?<=BANDWIDTH=)[0-9]+').search(line).group(0))        
+        if 'BANDWIDTH' in line:
+            stream = {}
+            stream['bitrate'] = int(Regex('(?<=BANDWIDTH=)[0-9]+').search(line).group(0))
 
-            if "RESOLUTION" in line:
-                stream["resolution"] = int(Regex('(?<=RESOLUTION=)[0-9]+x[0-9]+').search(line).group(0).split("x")[1])
+            if 'RESOLUTION' in line:
+                stream['resolution'] = int(Regex('(?<=RESOLUTION=)[0-9]+x[0-9]+').search(line).group(0).split('x')[1])
             else:
-                stream["resolution"] = 0
+                stream['resolution'] = 0
 
-        elif ".m3u8" in line:
+        elif '.m3u8' in line:
             path = ''
 
-            if not line.startswith("http"):
+            if not line.startswith('http'):
                 path = url[ : url.rfind('/') + 1]
 
-            stream["url"] = path + line
+            stream['url'] = path + line
 
             streams.append(stream)
 
-    sorted_streams = sorted(streams, key = lambda stream: stream["bitrate"], reverse = True)        
+    sorted_streams = sorted(streams, key=lambda stream: stream['bitrate'], reverse=True)
 
     return sorted_streams
 
