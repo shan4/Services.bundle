@@ -6,7 +6,10 @@ SERIES_URL = 'aHR0cDovL2ZlZWQudGhlcGxhdGZvcm0uY29tL2YvZm94LmNvbS9tZXRhZGF0YT9jb3
 ##########################################################################################
 def MetadataObjectForURL(url):
 
-    html = HTML.ElementFromURL(url)
+    try:
+        html = HTML.ElementFromURL(url)
+    except:
+        raise Ex.MediaNotAvailable
 
     try:
         data = html.xpath("//script[@type='application/ld+json']/text()")[0]
@@ -36,7 +39,11 @@ def MetadataObjectForURL(url):
 @deferred
 def MediaObjectsForURL(url):
 
-    html = HTML.ElementFromURL(url)
+    try:
+        html = HTML.ElementFromURL(url)
+    except:
+        raise Ex.MediaNotAvailable
+
     data = html.xpath("//script[@type='application/ld+json']/text()")[0]
     json = JSON.ObjectFromString(data)
 
@@ -125,7 +132,7 @@ def GetSpecificResolutionURL(url, video_resolution):
 ##########################################################################################
 def GetHLSStreams(url):
 
-    headers               = {}
+    headers = {}
     headers['User-Agent'] = USER_AGENT
 
     streams = []
@@ -141,14 +148,14 @@ def GetHLSStreams(url):
     # - Bitrate
     for line in playList.splitlines():
         if "BANDWIDTH" in line:
-            stream            = {}
-            stream["bitrate"] = int(Regex('(?<=BANDWIDTH=)[0-9]+').search(line).group(0))        
+            stream = {}
+            stream['bitrate'] = int(Regex('(?<=BANDWIDTH=)[0-9]+').search(line).group(0))
 
             if "RESOLUTION" in line:
-                stream["resolution"] = int(Regex('(?<=RESOLUTION=)[0-9]+x[0-9]+').search(line).group(0).split("x")[1])
+                stream['resolution'] = int(Regex('(?<=RESOLUTION=)[0-9]+x[0-9]+').search(line).group(0).split("x")[1])
 
             if not 'resolution' in stream:
-                stream["resolution"] = int(BitrateToResolution(stream["bitrate"]))
+                stream['resolution'] = int(BitrateToResolution(stream['bitrate']))
 
         elif "m3u8" in line:
             path = ''
@@ -157,12 +164,12 @@ def GetHLSStreams(url):
                 path = url[ : url.rfind('/') + 1]
 
             try:
-                stream["url"] = path + line    
+                stream['url'] = path + line
                 streams.append(stream)
             except:
                 pass
 
-    sorted_streams = sorted(streams, key = lambda stream: stream["bitrate"], reverse = True)        
+    sorted_streams = sorted(streams, key = lambda stream: stream['bitrate'], reverse = True)
 
     return sorted_streams
 
@@ -183,8 +190,8 @@ def BitrateToResolution(bitrate):
 ####################################################################################################
 def CreatePatchedPlaylist(url, cookies):
 
-    headers               = {}
-    headers['Cookie']     = cookies
+    headers = {}
+    headers['Cookie'] = cookies
     headers['User-Agent'] = USER_AGENT
 
     original_playlist = HTTP.Request(url, headers = headers, cacheTime = 0).content
@@ -208,8 +215,8 @@ def CreatePatchedPlaylist(url, cookies):
 ####################################################################################################
 def ContentOfURL(url, cookies):
 
-    headers               = {}
-    headers['Cookie']     = cookies
+    headers = {}
+    headers['Cookie'] = cookies
     headers['User-Agent'] = USER_AGENT
 
     return HTTP.Request(url, headers = headers, cacheTime = 0).content
