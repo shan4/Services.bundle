@@ -1,9 +1,5 @@
 FEED_URL = 'http://feed.theplatform.com/f/dtjsEC/EAlt6FfQ_kCX?byContent=byReleases%3DbyPid%253D'
-RAW_HLS_CLIENTS = ['Android', 'iOS', 'Roku', 'Safari']
-
 RE_PID = Regex('pid: *"(.*)",')
-RE_KEY_URI = Regex('URI *= *"(.*)"')
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18'
 
 #########################################################################################
 def MetadataObjectForURL(url):
