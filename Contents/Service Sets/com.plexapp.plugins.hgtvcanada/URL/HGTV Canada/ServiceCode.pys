@@ -16,7 +16,7 @@ def MetadataObjectForURL(url):
     summary = entry['description'] if 'description' in entry else None
     thumb = entry['plmedia$defaultThumbnailUrl'] if 'plmedia$defaultThumbnailUrl' in entry else None
     show = entry['pl1$show'] if 'pl1$show' in entry else None
-    season = int(entry['pl1$season']) if 'pl1$season' in entry else None
+    season = int(entry['pl1$season']) if 'pl1$season' in entry and entry['pl1$season'] != "Special" else None
     index = int(entry['pl1$episode']) if 'pl1$episode' in entry else None
     originally_available_at = Datetime.FromTimestamp(entry['pubDate'] / 1000).date() if 'pubDate' in entry else None
 
