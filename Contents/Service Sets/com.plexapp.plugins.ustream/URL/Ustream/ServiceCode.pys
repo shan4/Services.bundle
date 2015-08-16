@@ -5,6 +5,7 @@ USTREAM_IPHONE_URL = 'http://iphone-streaming.ustream.tv/uhls/%s/streams/live/ip
 USTREAM_REC_URL = 'http://www.ustream.tv/recorded/%s'
 
 RE_RECORDED_ID = Regex('/recorded/(\d+)')
+RE_EMBED_ID = Regex('/embed/(\d+)')
 RE_PROGRESSED = Regex('#PROGRESSED (\d+)%')
 
 ####################################################################################################
@@ -56,16 +57,15 @@ def MetadataObjectForURL(url):
 		# For live channels, look for a video ID in the HTML...
 		try:
 			html = HTML.ElementFromURL(url)
+			video_id = html.xpath('//a[@data-content-id]/@data-content-id')[0]
 		except:
-			raise Ex.MediaNotAvailable
-
-		video_id = html.xpath('//a[@data-content-id]/@data-content-id')
-
-		if len(video_id) < 1:
-			raise Ex.MediaNotAvailable
+			try:
+				video_id = RE_EMBED_ID.search(url).group(1)
+			except:
+				raise Ex.MediaNotAvailable
 
 		try:
-			json_obj = JSON.ObjectFromURL(USTREAM_CH_JSON % (video_id[0]))['channel']
+			json_obj = JSON.ObjectFromURL(USTREAM_CH_JSON % (video_id))['channel']
 		except:
 			raise Ex.MediaNotAvailable
 
@@ -142,13 +142,16 @@ def PlayLive(url, **kwargs):
 	except:
 		raise Ex.MediaNotAvailable
 
-	video_id = html.xpath('//a[@data-content-id]/@data-content-id')
+	try:
+		video_id = html.xpath('//a[@data-content-id]/@data-content-id')[0]
+	except:
+		try:
+			video_id = RE_EMBED_ID.search(url).group(1)
+		except:
+			raise Ex.MediaNotAvailable
 
-	if len(video_id) < 1:
-		raise Ex.MediaNotAvailable
-
-	if StreamIsReady(video_id[0]):
-		return Redirect(USTREAM_IPHONE_URL % video_id[0])
+	if StreamIsReady(video_id):
+		return Redirect(USTREAM_IPHONE_URL % video_id)
 	else:
 		raise Ex.LiveMediaNotStarted
 
