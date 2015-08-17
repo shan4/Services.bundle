@@ -17,29 +17,13 @@ def MediaObjectsForURL(url):
 			container = Container.MP4,
 			video_codec = VideoCodec.H264,
 			audio_codec = AudioCodec.AAC,
-			video_resolution = '1080',
+			video_resolution = resolution,
 			optimized_for_streaming = True,
 			audio_channels = 2,
-			parts = [PartObject(key=Callback(PlayVideo, url=url, res=1080))]
-		),
-		MediaObject(
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			audio_codec = AudioCodec.AAC,
-			video_resolution = '720',
-			optimized_for_streaming = True,
-			audio_channels = 2,
-			parts = [PartObject(key=Callback(PlayVideo, url=url, res=720))]
-		),
-		MediaObject(
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			audio_codec = AudioCodec.AAC,
-			video_resolution = '480',
-			optimized_for_streaming = True,
-			audio_channels = 2,
-			parts = [PartObject(key=Callback(PlayVideo, url=url, res=480))]
-		)
+			parts = [
+				PartObject(key=Callback(PlayVideo, url=url, res=resolution))
+			]
+		) for resolution in (1080, 720, 480)
 	]
 
 ####################################################################################################
