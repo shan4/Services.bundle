@@ -41,10 +41,12 @@ def MetadataObjectForURL(url):
 
   video = GetJSON(url)
 
-  if 'pdk_flash_url' in video:
+  if 'pdk_flash_url' in video and video['pdk_flash_url']:
     pdk_url = '%s&format=script' % video['pdk_flash_url']
-  elif 'release_url' in video:
+  elif 'release_url' in video and video['release_url']:
     pdk_url = '%s&format=script' % video['release_url']
+  elif 'release_url_ak' in video and video['release_url_ak']:
+    pdk_url = '%s&format=script' % video['release_url_ak']
   else:
     raise Ex.MediaNotAvailable
 
@@ -116,10 +118,13 @@ def PlayVideo(url, res, **kwargs):
 
   video = GetJSON(url)
 
-  if 'pdk_flash_url' in video:
+  if 'pdk_flash_url' in video and video['pdk_flash_url']:
     smil_url = video['pdk_flash_url'].replace('switch=rtmp', 'format=SMIL')
-  elif 'release_url' in video:
+  elif 'release_url' in video and video['release_url']:
     smil_url = video['release_url'].split('?')[0]
+    smil_url = '%s?mbr=true&format=SMIL&assetTypes=medium_video_s3&metafile=true' % smil_url
+  elif 'release_url_ak' in video and video['release_url_ak']:
+    smil_url = video['release_url_ak'].split('?')[0]
     smil_url = '%s?mbr=true&format=SMIL&assetTypes=medium_video_s3&metafile=true' % smil_url
   else:
     raise Ex.MediaNotAvailable
