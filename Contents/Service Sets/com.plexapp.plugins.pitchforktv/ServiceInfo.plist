@@ -4,26 +4,11 @@
 <dict>
 	<key>URL</key>
 	<dict>
-		<key>Pitchfork TV</key>
+		<key>Pitchfork.tv</key>
 		<dict>
-			<key>TestURLs</key>
-			<array>
-				<string>http://pitchfork.com/tv/27-pitchfork-classic/716-belle-and-sebastian-if-youre-feeling-sinister/</string>
-			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://(www\.)?pitchfork\.com/tv/\d+\-.+</string>
-			</array>
-		</dict>
-		<key>Pitchfork TV YouTube</key>
-		<dict>
-			<key>TestURLs</key>
-			<array>
-				<string>http://pitchfork.com/tv/youtube/11-pitchfork-weekly/275-andrew-wk-flying-lotus-pay-attention/</string>
-			</array>
-			<key>URLPatterns</key>
-			<array>
-				<string>^http://(www\.)?pitchfork\.com/tv/youtube/.+</string>
+				<string>^http:\/\/pitchfork\.com\/tv\/\d+\-.+</string>
 			</array>
 		</dict>
 	</dict>

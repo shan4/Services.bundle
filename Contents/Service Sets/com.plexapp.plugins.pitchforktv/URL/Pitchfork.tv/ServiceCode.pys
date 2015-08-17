@@ -1,15 +1,13 @@
-RE_YT_URL = Regex('tv\.play\("([^"]+)"')
-
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	data = HTTP.Request(url).content
-	yt_url = RE_YT_URL.search(data)
+	html = HTML.ElementFromURL(url)
+	yt_iframe = html.xpath('//iframe[contains(@src, "youtube.com/embed/")]/@src')
 
-	if yt_url:
-		return URLService.MetadataObjectForURL(yt_url.group(1).replace('\u003D', '='))
+	if len(yt_iframe) < 1:
+		raise Ex.MediaNotAvailable
 
-	raise Ex.MediaNotAvailable
+	return URLService.MetadataObjectForURL(yt_iframe[0])
 
 ####################################################################################################
 def MediaObjectsForURL(url):
@@ -48,13 +46,13 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, res=1080, **kwargs):
 
-	data = HTTP.Request(url).content
-	yt_url = RE_YT_URL.search(data)
+	html = HTML.ElementFromURL(url)
+	yt_iframe = html.xpath('//iframe[contains(@src, "youtube.com/embed/")]/@src')
 
-	if not yt_url:
+	if len(yt_iframe) < 1:
 		raise Ex.MediaNotAvailable
 
-	media = URLService.MediaObjectsForURL(yt_url.group(1).replace('\u003D', '='))
+	media = URLService.MediaObjectsForURL(yt_iframe[0])
 
 	resolutions = [1080, 720, 480]
 	index = resolutions.index(res)
