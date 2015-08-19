@@ -1,4 +1,4 @@
-RE_PLAYER_CONFIG = Regex('new FM\.Kaltura\.Player\([^{]+(.+)\);')
+RE_PLAYER_CONFIG = Regex('new FM\.Player\([^{]+(.+)\)')
 
 ####################################################################################################
 def NormalizeURL(url):
