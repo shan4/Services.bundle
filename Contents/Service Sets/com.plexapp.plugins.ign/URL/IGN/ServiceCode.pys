@@ -123,6 +123,10 @@ def PlayVideo(url, bitrate, **kwargs):
 		raise Ex.MediaNotAvailable
 
 	media_url = json_obj['playlist']['media']['url']
+
+	if not media_url:
+		raise Ex.MediaNotAvailable
+
 	video_url = None
 
 	if '.smil' in media_url:
