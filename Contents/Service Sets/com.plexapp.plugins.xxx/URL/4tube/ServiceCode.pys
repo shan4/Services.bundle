@@ -1,6 +1,5 @@
 BASE_URL = 'http://www.4tube.com'
 VIDEOS_URL = 'http://tkn.4tube.com/%s/desktop/%s'
-RE_MEDIA_ID = Regex('\}\)\((\d+), \d+, \[(.+?)\]\);')
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -82,19 +81,19 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, res=1080, **kwargs):
 
 	try:
-		data = HTTP.Request(url, follow_redirects=False).content
+		html = HTML.ElementFromURL(url, follow_redirects=False)
 	except Ex.RedirectError, e:
 		raise Ex.MediaExpired
 	except:
 		raise Ex.MediaNotAvailable
 
-	mid = RE_MEDIA_ID.search(data)
-	if not mid:
+	media_id = html.xpath('//button[@data-name="4tube"]/@data-id')
+	quality = html.xpath('//button[@data-name="4tube"]/@data-quality')
+
+	if len(media_id) < 1 or len(quality) < 1:
 		raise Ex.MediaNotAvailable
 
-	(media_id, qualities) = mid.groups()
-
-	videos_url = VIDEOS_URL % (media_id, '+'.join(qualities.split(',')))
+	videos_url = VIDEOS_URL % (media_id[0], '+'.join(quality))
 
 	json_obj = JSON.ObjectFromURL(videos_url, headers={'Origin': 'http://www.4tube.com'}, method='POST')
 	available_versions = json_obj.keys()
