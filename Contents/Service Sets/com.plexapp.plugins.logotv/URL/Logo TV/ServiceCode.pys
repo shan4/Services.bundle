@@ -1,39 +1,61 @@
 NAMESPACES = {"media":"http://search.yahoo.com/mrss/"}
 MRSS_URL = "http://www.logotv.com/player/includes/rss.jhtml?uri=%s"
 
-URI_FORMAT = 'mgid:uma:%s:mtv.com:%s'
-RE_URI = Regex('MTVN.Player.(?:episode|video)Uri = \"(.+?)\"')
-RE_URI2 = Regex("MTVN.VIDEO.contentUri = \'(.+?)\';")
-RE_PLAYLIST = Regex('MTVN.Player.defaultPlaylistId = (\d{7})')
+URI_FORMAT = 'mgid:uma:videolist:mtv.com:%s'
+RE_SERIES = Regex('.tvSeriesObj.title = "(.+?)";')
 
 RE_RES_BIT = Regex('x(\d+)_(\d+)_?[^._]*\.(mp4|flv)')
 
 MediaObject.audio_channels = 2
 MediaObject.optimized_for_streaming = True
 ####################################################################################################
-def NormalizeURL(url):
-
-	return url.split('#')[0]
-
-####################################################################################################
 def MetadataObjectForURL(url):
 
+    try:
+        content = HTTP.Request(url).content
+        html = HTML.ElementFromString(content)
+    except: raise Ex.MediaNotAvailable
+
+    title = html.xpath('//meta[@property="og:title"]/@content')[0]
+    summary = html.xpath('//meta[@property="og:description"]/@content')[0]
+    thumb = html.xpath('//meta[@property="og:image"]/@content')[0].split('?')[0]
+    duration = 0
+
     data = GetRSS(url)
-    title = data.xpath('//title')[0].text
+    media_urls = data.xpath('//media:content[@medium="video"]', namespaces=NAMESPACES)
+    for segment in media_urls:
+        if segment.get('duration') != "":
+            if ':' in segment.get('duration'):
+                duration += Datetime.MillisecondsFromString(segment.get('duration'))
+            else:
+                duration += int(float(segment.get('duration'))*1000)
+    try:
+        air_date = data.xpath('//pubDate/text()')[0]
+        originally_available_at = Datetime.ParseDate(air_date)
+    except:
+        originally_available_at = None
 
-    try: summary = data.xpath('//description')[0].text
-    except: summary = None
+    if 'playlist' in url:
 
-    # The thumb is in item vs the main content in the xml files
-    thumb = data.xpath('//item/image//@url')[0]
-    date = Datetime.ParseDate(data.xpath('//pubDate')[0].text).date()
+        show = RE_SERIES.search(content).group(1)
+        return EpisodeObject(
+            show = show,
+	    title = title,
+	    summary = summary,
+	    duration = duration,
+	    thumb = Resource.ContentsOfURLWithFallback(url=thumb),
+	    originally_available_at = originally_available_at
+	)
 
-    return VideoClipObject(
-        title = title,
-        summary = summary,
-        thumb = Resource.ContentsOfURLWithFallback(url=thumb),
-        originally_available_at = date
-    )
+    else:
+
+        return VideoClipObject(
+            title = title,
+            summary = summary,
+            duration = duration,
+            thumb = Resource.ContentsOfURLWithFallback(url=thumb),
+            originally_available_at = originally_available_at
+        )
 
 ####################################################################################################
 @deferred
@@ -49,13 +71,15 @@ def MediaObjectsForURL(url):
         except:
             raise Ex.MediaNotAvailable
 
-        renditions = video_data.xpath('//rendition')
+        renditions = video_data.xpath('//rendition[@type="video/mp4"]')
 
         if len(renditions) < 1:
             raise Ex.MediaNotAvailable
 
         for rendition in renditions:
             rtmp_url = rendition.xpath('./src/text()')[0]
+            if '.flv' in rtmp_url:
+                continue
             # For video with incorrect fields, try to get the bitrate and height from the rtmp url first
             # Found one that was different, adjusted regex, but still best to put in a try/except
             try: bitrate = RE_RES_BIT.search(rtmp_url).group(2)
@@ -63,15 +87,14 @@ def MediaObjectsForURL(url):
             try: height = RE_RES_BIT.search(rtmp_url).group(1)
             except: height = rendition.get('height')
 
-            # Set up to pull the type of video file so that it can work with flv or mp4
+            if bitrate not in available_streams:
+                available_streams[bitrate] = []
+            # Set up to pull the video file
             part = {}
             part['duration'] = rendition.get('duration')
             part['height'] = height
             part['rtmp_url'] = rtmp_url.split('/viacomlogostrm/')[-1]
-            part['clip_type'] = rtmp_url.split('.')[-1]
 
-            if bitrate not in available_streams:
-                available_streams[bitrate] = []
             available_streams[bitrate].append(part)
 
     media_objects = []
@@ -88,7 +111,7 @@ def MediaObjectsForURL(url):
                 PartObject(
                     key = RTMPVideoURL(
                         url='rtmpe://viacommtvstrmfs.fplive.net:1935/viacommtvstrm/',
-                        clip='%s:%s' % (part['clip_type'], part['rtmp_url'])
+                        clip='mp4:%s' %(part['rtmp_url'])
                     ),
                     duration = int(part['duration'])*1000
                 )
@@ -107,25 +130,19 @@ def MediaObjectsForURL(url):
     return media_objects
 
 ####################################################################################################
-# Pull the uri from the html of video page. 
-# We no longer use the mgid number in the url since the length no longer determines if is it a video or videolist type of uri. 
+# Get the uri and produce the RSS xml page 
 def GetRSS(url):
 
-    # The uri may not show that it is part of a video clip playlist, so we check for a playlist id on the page first.
-    content = HTTP.Request(url).content
-    try: mgid_num = RE_PLAYLIST.search(content).group(1)
-    except: mgid_num = None
-    if mgid_num:
+    # There is no longer any way to know whether a video clip is part of a playlist code
+    # So we make all of them a videolist uri
+    if 'id=' in url:
+        mgid_num = url.split('id=')[1]
         # if there is a playlist id, build a videolist type uri
-        uri = URI_FORMAT %('videolist', mgid_num)
+        uri = URI_FORMAT %mgid_num
     else:
+        html = HTML.ElementFromURL(url)
         # Pull the uri from the web page
-        content = HTTP.Request(url).content
-        try:
-            uri = RE_URI.search(content).group(1)
-        except:
-            try: uri = RE_URI2.search(content).group(1)
-            except: raise Ex.MediaNotAvailable
+        uri = html.xpath('//link[@rel="video_src"]/@href')[0].split('/')[-1]
 
     xml = XML.ElementFromURL(MRSS_URL % uri)
 
