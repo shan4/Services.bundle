@@ -14,7 +14,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
 
 	json = html.xpath('//div[@data-video]/@data-video')
 	if len(json) < 1:
@@ -65,7 +68,11 @@ def PlayVideo(url, fmt='high', **kwargs):
 	if 'api_key=' in url:
 		return None
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
+
 	json = html.xpath('//div[@data-video]/@data-video')
 
 	if len(json) < 1:
