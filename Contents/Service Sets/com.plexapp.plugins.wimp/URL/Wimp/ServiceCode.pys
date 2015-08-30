@@ -1,6 +1,7 @@
 HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36'}
 HTTP_HEADERS_IPAD = {'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 6_0_1 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A523 Safari/8536.25'}
 
+RE_VIDEO_ID = Regex("videoId: '(.{11})',")
 RE_FILE_ID = Regex('"file"(?:\:|,) *"([^\"]+)"')
 
 ####################################################################################################
@@ -18,6 +19,11 @@ def MetadataObjectForURL(url):
 
 	if len(yt_iframe) > 0:
 		return URLService.MetadataObjectForURL(yt_iframe[0])
+
+	elif RE_VIDEO_ID.search(data):
+		url = 'https://www.youtube.com/watch?v=%s' % RE_VIDEO_ID.search(data).group(1)
+		return URLService.MetadataObjectForURL(url)
+
 	elif RE_FILE_ID.search(data):
 		url = RE_FILE_ID.search(data).group(1)
 
