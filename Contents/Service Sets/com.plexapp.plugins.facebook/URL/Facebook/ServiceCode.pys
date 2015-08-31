@@ -14,7 +14,7 @@ def MetadataObjectForURL(url):
 	if RE_AVAILABLE.search(page_content):
 		raise Ex.MediaNotAvailable
 
-	title = HTML.ElementFromString(page_content).xpath('//h2/text()')[0]
+	title = HTML.ElementFromString(page_content).xpath('//h2/text()|//span[@class="hasCaption"]/text()')[0]
 	duration = None
 	thumb = ''
 
@@ -80,7 +80,7 @@ def PlayVideo(url, res='720', **kwargs):
 
 	for i in json_obj:
 		if i[0] == 'params':
-			json_obj = JSON.ObjectFromString(String.Unquote(i[1]))
+			json_obj = JSON.ObjectFromString(String.Unquote(i[1]))['video_data'][0]
 			break
 
 	if not json_obj:
