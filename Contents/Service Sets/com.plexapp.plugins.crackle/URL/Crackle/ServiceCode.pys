@@ -1,7 +1,7 @@
-URL_GEO = 'http://ios-api.crackle.com/Service.svc/geo/country?format=json'
-URL_DETAILS = 'http://ios-api.crackle.com/Service.svc/channel/%s/folders/%s?format=json'
+URL_GEO = 'https://web-api-us.crackle.com/Service.svc/geo/country?format=json'
+URL_DETAILS = 'https://web-api-us.crackle.com/Service.svc/details/media/%s/%s?format=json'
 
-RE_VIDEO_ID = Regex('\/(?P<id>\d+)')
+RE_VIDEO_ID = Regex('\/(?P<media_id>\d+)')
 RE_HOST = Regex('\/\/.+?\.crackle\.com\/')
 
 ####################################################################################################
@@ -176,36 +176,23 @@ def PlayVideo(url, res, **kwargs):
 ####################################################################################################
 def GetVideoDetails(url, res=None):
 
-    video_id = GetVideoID(url)
+    media_id = RE_VIDEO_ID.search(url).group('media_id')
     geo_code = GetGeoCode()
 
-    page_element = HTML.ElementFromURL(url)
-    channel_id = page_element.xpath("//*[@id='channelId']/@value")[0] 
+    json_obj = JSON.ObjectFromURL(URL_DETAILS % (media_id, geo_code))
 
-    details = JSON.ObjectFromURL(URL_DETAILS % (channel_id, geo_code))
-
-    if not 'FolderList' in details or len(details['FolderList']) < 1:
+    if not 'ThumbnailExternal' in json_obj:
         raise Ex.MediaNotAvailable
 
-    for playlist in details['FolderList'][0]['PlaylistList']:
-        for title in playlist['MediaList']:
-            if str(title['ID']) == video_id:
-                if res:
-                    video_url = title['ThumbnailExternal']
-                    video_url = RE_HOST.sub('//media-us-am.crackle.com/', video_url)
-                    video_url = video_url[:video_url.rfind('_') + 1]
-                    video_url = video_url + res + '.mp4'
+    if res:
+        video_url = json_obj['ThumbnailExternal']
+        video_url = RE_HOST.sub('//media-us-am.crackle.com/', video_url)
+        video_url = video_url[:video_url.rfind('_') + 1]
+        video_url = video_url + res + '.mp4'
 
-                    return video_url
-                else:
-                    return title
-
-    return None
-
-####################################################################################################
-def GetVideoID(url):
-
-    return RE_VIDEO_ID.search(url).group('id')
+        return video_url
+    else:
+        return json_obj
 
 ####################################################################################################
 def GetGeoCode():
