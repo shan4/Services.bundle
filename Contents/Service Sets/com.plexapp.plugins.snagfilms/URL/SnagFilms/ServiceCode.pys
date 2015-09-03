@@ -1,4 +1,5 @@
-HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'}
+HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'}
+HTTP_HEADERS_IPAD = {'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'}
 RE_M3U8_URL = Regex('file:\s*"([^"]+\.m3u8)')
 
 ####################################################################################################
@@ -44,14 +45,14 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, **kwargs):
 
-	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS)
+	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS_IPAD)
 
 	iframe = html.xpath('//iframe[contains(@src, "/embed/player")]/@src')
 
 	if len(iframe) < 1:
 		raise Ex.MediaNotAvailable
 
-	data = HTTP.Request('http://www.snagfilms.com%s' % (iframe[0]), headers=HTTP_HEADERS).content
+	data = HTTP.Request('http://www.snagfilms.com%s' % (iframe[0]), headers=HTTP_HEADERS_IPAD).content
 	m3u8_url = RE_M3U8_URL.search(data)
 
 	if not m3u8_url:
