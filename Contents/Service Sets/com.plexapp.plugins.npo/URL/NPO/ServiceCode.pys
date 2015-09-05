@@ -83,8 +83,10 @@ def PlayVideo(url, **kwargs):
 
 	if not token:
 		raise Ex.MediaNotAvailable
+	else:
+		token = SwapToken(token.group(1))
 
-	json = JSON.ObjectFromURL(STREAM_URL % (player_id, token.group(1)), cacheTime=0)
+	json = JSON.ObjectFromURL(STREAM_URL % (player_id, token), cacheTime=0)
 	stream = '%s?extension=m3u8&type=json' % json['streams'][0].split('?')[0]
 
 	try:
@@ -103,3 +105,35 @@ def GetPlayerId(url):
 		return url.split('/')[-1]
 
 	return None
+
+####################################################################################################
+# SwapToken function from Retrospect - http://www.rieter.net/content/
+def SwapToken(token):
+
+	first = -1
+	second = -1
+	startAt = 5
+	#Log("Starting Token swap at position in: %s %s %s", token[0:startAt], token[startAt:len(token) - startAt], token[len(token) - startAt:])
+	for i in range(startAt, len(token) - startAt, 1):
+		#Log("Checking %s", token[i])
+		if token[i].isdigit():
+			if first < 0:
+				first = i
+				#Log("Storing first digit at position %s: %s", first, token[i])
+			elif second < 0:
+				second = i
+				#Log("Storing second digit at position %s: %s", second, token[i])
+				break
+
+	# swap them
+	newToken = list(token)
+	if first < 0 or second < 0:
+		#Log("No number combo found in range %s. Swapping middle items", token[startAt:len(token) - startAt])
+		first = 12
+		second = 13
+
+	#Log("Swapping position %s with %s", first, second)
+	newToken[first] = token[second]
+	newToken[second] = token[first]
+	newToken = ''.join(newToken)
+	return newToken
