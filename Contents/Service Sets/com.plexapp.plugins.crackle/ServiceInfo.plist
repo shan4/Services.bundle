@@ -8,12 +8,11 @@
 		<dict>
 			<key>TestURLs</key>
 			<array>
-				<string>http://www.crackle.com/c/comedians-in-cars-getting-coffee/aziz-ansari-it-s-like-pushing-a-building-off-a-cliff/2493096</string>
-				<string>http://www.crackle.com/c/resident-evil-damnation</string>
+				<string>http://www.crackle.com/watch/video/2493096</string>
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://(www\.)?crackle\.com/.+/\d+</string>
+				<string>^http://(www\.)?crackle\.com\/watch\/video\/\d+</string>
 			</array>
 		</dict>
 	</dict>
