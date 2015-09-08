@@ -10,17 +10,63 @@ def MetadataObjectForURL(url):
     media_id = RE_MEDIA_ID.search(url).group('media_id')
     xml = XML.ElementFromURL(DATA_URL % (media_id))
 
-    title = xml.xpath('//i/@t')[0]
+    title = xml.xpath('//i/@t')
+
+    if len(title) < 1:
+        raise Ex.MediaNotAvailable
+
     summary = xml.xpath('//i/@d')[0]
     thumb = THUMB_URL % (xml.xpath('//i/@p')[0])
     duration = int(xml.xpath('//i/@r')[0], 16)
+    content_rating = xml.xpath('//i/@dc')[0]
 
-    return VideoClipObject(
-        title = title,
-        summary = summary,
-        thumb = Resource.ContentsOfURLWithFallback(url=thumb),
-        duration = duration
-    )
+    media_type = xml.xpath('//i/@odt')[0].lower()
+
+    if 'episode' in media_type or 'original' in media_type:
+
+        show = xml.xpath('//i/@sn')[0]
+        season = int(xml.xpath('//i/@se')[0])
+        index = int(xml.xpath('//i/@ep')[0])
+
+        return EpisodeObject(
+            title = title[0],
+            summary = summary,
+            thumb = Resource.ContentsOfURLWithFallback(url=thumb),
+            duration = duration,
+            content_rating = content_rating,
+            show = show,
+            season = season,
+            index = index
+        )
+
+    elif 'film' in media_type:
+
+        year = int(xml.xpath('//i/@ry')[0], 16)
+        genres = [genre for genre in xml.xpath('//i/@ge')[0].split(',')]
+        directors = [director for director in xml.xpath('//i/@dr')[0].split(',')]
+        writers = [writer for writer in xml.xpath('//i/@wr')[0].split(',')]
+
+        return MovieObject(
+            title = title[0],
+            summary = summary,
+            thumb = Resource.ContentsOfURLWithFallback(url=thumb),
+            duration = duration,
+            content_rating = content_rating,
+            year = year,
+            genres = genres,
+            directors = directors,
+            writers = writers
+        )
+
+    else:
+
+        return VideoClipObject(
+            title = title[0],
+            summary = summary,
+            thumb = Resource.ContentsOfURLWithFallback(url=thumb),
+            duration = duration,
+            content_rating = content_rating
+        )
 
 ####################################################################################################
 def MediaObjectsForURL(url):
