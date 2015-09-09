@@ -42,9 +42,18 @@ def MetadataObjectForURL(url):
     elif 'film' in media_type:
 
         year = int(xml.xpath('//i/@ry')[0], 16)
-        genres = [genre for genre in xml.xpath('//i/@ge')[0].split(',')]
-        directors = [director for director in xml.xpath('//i/@dr')[0].split(',')]
-        writers = [writer for writer in xml.xpath('//i/@wr')[0].split(',')]
+
+        genres = []
+        if len(xml.xpath('//i/@ge')) > 0:
+            genres = [genre for genre in xml.xpath('//i/@ge')[0].split(',')]
+
+        directors = []
+        if len(xml.xpath('//i/@dr')) > 0:
+            directors = [director for director in xml.xpath('//i/@dr')[0].split(',')]
+
+        writers = []
+        if len(xml.xpath('//i/@wr')) > 0:
+            writers = [writer for writer in xml.xpath('//i/@wr')[0].split(',')]
 
         return MovieObject(
             title = title[0],
