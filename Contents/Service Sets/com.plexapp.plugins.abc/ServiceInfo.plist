@@ -9,7 +9,7 @@
 			<key>URLPatterns</key>
 			<array>
 				<string>^http://(watch)?abc\.go\.com/.+/SH\d+/VD(KA\d_[^/]+|\d+)</string>
-				<string>^http://abc\.go\.com/shows/[^/]+/episode\-guide/season-\d+/\d+\-.+</string>
+				<string>^http://abc(family)?\.go\.com/shows/[^/]+/episode\-guide/season-\d+/\d+\-.+</string>
 				<string>^http://abc\.go\.com/shows/[^/]+/listing/episode\-\d+</string>
 				<string>^http://abc\.go\.com/shows/[^/]+/listing/\d{4}\-\d{2}/.+</string>
 				<string>^http://abc\.go\.com/service/redirect/fep\?videoid=VDKA\d_[^/]+</string>
