@@ -29,7 +29,17 @@ def MetadataObjectForURL(url):
 		if not 'PrimaryAsset' in json:
 			raise Ex.MediaNotAvailable
 
-		if Datetime.TimestampFromDatetime(Datetime.ParseDate(json['PrimaryAsset']['EndPublish'])) < Datetime.TimestampFromDatetime(Datetime.Now()):
+		# Expired check
+		# Check for big future years first to prevent
+		# "OverflowError: mktime argument out of range" error on the node server
+		expired = False
+
+		if int(json['PrimaryAsset']['EndPublish'].split('-')[0]) > Datetime.Now().year:
+			expired = False
+		elif Datetime.TimestampFromDatetime(Datetime.ParseDate(json['PrimaryAsset']['EndPublish'])) < Datetime.TimestampFromDatetime(Datetime.Now()):
+			expired = True
+
+		if expired:
 			raise Ex.MediaExpired
 		else:
 			mo = EpisodeObject()
