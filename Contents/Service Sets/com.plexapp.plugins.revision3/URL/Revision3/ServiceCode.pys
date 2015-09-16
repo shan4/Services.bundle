@@ -1,5 +1,5 @@
 API_URL = 'http://revision3.com/api/getPlaylist.json?api_key=ba9c741bce1b9d8e3defcc22193f3651b8867e62&codecs=h264&video_id=%s'
-RE_VIDEO_ID = Regex("\('video_id', (\d+)\);")
+RE_VIDEO_ID = Regex('embed\?videoId=(\d+)')
 
 ####################################################################################################
 def NormalizeURL(url):
