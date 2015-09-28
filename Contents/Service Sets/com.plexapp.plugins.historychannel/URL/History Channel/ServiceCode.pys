@@ -101,7 +101,7 @@ def PlayVideo(url, res='540', **kwargs):
   if not video_url:
     raise Ex.MediaNotAvailable
 
-  if video_url.startswith('http://'):
+  if video_url.startswith('http://') or video_url.startswith('https://'):
     return IndirectResponse(VideoClipObject, key=video_url)
   else:
     raise Ex.MediaNotAvailable
