@@ -7,7 +7,13 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	try:
-		html = HTML.ElementFromURL(url)
+		html = HTML.ElementFromURL(url, follow_redirects=False)
+	except Ex.RedirectError, e:
+		if 'Location' in e.headers:
+			if 'video-removed' in e.headers['Location']:
+				raise Ex.MediaNotAvailable
+		else:
+			raise Ex.MediaNotAvailable
 	except:
 		raise Ex.MediaNotAvailable
 
@@ -47,7 +53,13 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, **kwargs):
 
 	try:
-		html = HTML.ElementFromURL(url)
+		html = HTML.ElementFromURL(url, follow_redirects=False)
+	except Ex.RedirectError, e:
+		if 'Location' in e.headers:
+			if 'video-removed' in e.headers['Location']:
+				raise Ex.MediaNotAvailable
+		else:
+			raise Ex.MediaNotAvailable
 	except:
 		raise Ex.MediaNotAvailable
 
