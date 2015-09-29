@@ -2,7 +2,7 @@ MRSS_URL = 'http://www.cc.com/feeds/mrss?uri=%s'
 NAMESPACES = {'media': 'http://search.yahoo.com/mrss/'}
 
 RE_FIX_XML = Regex('(<!--.*?-->)')
-RE_BITRATE = Regex('_(\d+)_?[^._]*\.mp4')
+RE_BITRATE = Regex('_\d+x\d+_(\d+).*\.mp4')
 
 MediaObject.audio_channels = 2
 MediaObject.optimized_for_streaming = True
