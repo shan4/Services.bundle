@@ -30,7 +30,6 @@ def MetadataObjectForURL(url):
 		thumb_url = ''
 
 	duration = int(video['duration'])*1000
-	rating = float(video['rating'])
 
 	try:
 		date_string = thumb_url.split('?')[-1]
@@ -44,8 +43,7 @@ def MetadataObjectForURL(url):
 		summary = summary,
 		thumb = Resource.ContentsOfURLWithFallback(thumb_url),
 		duration = duration,
-		originally_available_at = originally_available_at,
-		rating = rating
+		originally_available_at = originally_available_at
 	)
 
 ####################################################################################################
