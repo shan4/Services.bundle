@@ -42,7 +42,7 @@ def MetadataObjectForURL(url):
 			raise Ex.MediaExpired
 		else:
 			mo = EpisodeObject()
-			mo.title = unicode(json['Title'])
+			mo.title = unicode(json['Title']).split(' | ')[0]
 			mo.summary = json['Description']
 			mo.originally_available_at = Datetime.ParseDate(json['PrimaryBroadcastStartTime'])
 			mo.show = json['SeriesTitle']
@@ -82,7 +82,7 @@ def MetadataObjectForURL(url):
 				raise Ex.MediaExpired
 			else:
 				mo = EpisodeObject()
-				mo.title = unicode(title)
+				mo.title = unicode(title).split(' | ')[0]
 				mo.summary = json['Data'][0]['Description']
 				mo.thumb = 'http://www.dr.dk/mu/ProgramCard/ImageUri/' + json['Data'][0]['Slug'] + '?height=512&width=512'
 				mo.art = 'http://www.dr.dk/mu/ProgramCard/ImageUri/' + json['Data'][0]['Slug']
