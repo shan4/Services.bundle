@@ -16,9 +16,5 @@
 			</array>
 		</dict>
 	</dict>
-	<key>PlexFrameworkFlags</key>
-	<array>
-		<string>UseRealRTMP</string>
-	</array>
 </dict>
 </plist>
