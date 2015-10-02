@@ -90,8 +90,10 @@ def MediaObjectsForURL(url):
         # With so many archived videos on these sites 
         # some are flv with only resolutions lower than 360 
         # So this makes them produce the video in the highest quality available
-        try: media_res_list = XML.ElementFromURL(media_urls[0]).xpath('//rendition/@height')
-        except: media_res_list = []
+        media_res_list = XML.ElementFromURL(media_urls[0]).xpath('//rendition/@height')
+
+        if len(media_res_list) < 1:
+            raise Ex.MediaNotAvailable
 
         if int(media_res_list[len(media_res_list)-1]) < 360:
             min_res = int(media_res_list[len(media_res_list)-1])
