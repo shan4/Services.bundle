@@ -19,7 +19,7 @@ def MetadataObjectForURL(url):
 
     title = json['name']
     summary = json['description']
-    thumb = json['image']
+    thumb = json['image'] if 'image' in json else None
     index = int(json['episodeNumber'])    
     show = json['partOfSeries']['name']
     season = int(json['partOfSeason']['seasonNumber'])
