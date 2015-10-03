@@ -13,7 +13,11 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	id = url.split('/')[-1].strip()
-	json_obj = JSON.ObjectFromURL(DETAILS_URL % id, headers=HTTP_HEADERS)
+
+	try:
+		json_obj = JSON.ObjectFromURL(DETAILS_URL % id, headers=HTTP_HEADERS)
+	except:
+		raise Ex.MediaNotAvailable
 
 	if not json_obj['success']:
 		raise Ex.MediaNotAvailable
@@ -67,7 +71,11 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, **kwargs):
 
 	id = url.split('/')[-1]
-	json_obj = JSON.ObjectFromURL(AUTH_URL % id, headers=HTTP_HEADERS)
+
+	try:
+		json_obj = JSON.ObjectFromURL(AUTH_URL % id, headers=HTTP_HEADERS)
+	except:
+		raise Ex.MediaNotAvailable
 
 	if 'video' not in json_obj or not json_obj['video']:
 
