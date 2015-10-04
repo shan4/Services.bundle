@@ -1,4 +1,5 @@
-THUMB_URL = 'http://cdn.anythumb.com/640x360/%s.jpg'
+THUMB_URL_720 = 'http://cdn.anythumb.com/1280x720/%s.jpg'
+THUMB_URL_360 = 'http://cdn.anythumb.com/640x360/%s.jpg'
 THUMB_URL_ORIG = 'http://cdn.anythumb.com/236x177/%s.jpg'
 
 RE_VIDEO_720 = Regex("'720p': '([^']+)'")
@@ -15,20 +16,40 @@ def MetadataObjectForURL(url):
 	html = HTML.ElementFromURL(url)
 
 	title = html.xpath('//title/text()')[0].split(' - beeg.')[0].strip()
-	summary = html.xpath('//meta[@name="description"]/@content')
+	summary = html.xpath('//td[contains(@class, "synopsis")]/text()')
 
 	if len(summary) > 0:
-		summary = summary[0].split(' - free')[0].strip()
+		if len(summary[0]) < 2:
+			summary = None
+		else:
+			summary = summary[0]
 	else:
 		summary = None
 
-	thumb_1 = THUMB_URL % url.split('/')[-1]
-	thumb_2 = THUMB_URL_ORIG % url.split('/')[-1]
+	thumb_1 = THUMB_URL_720 % url.split('/')[-1]
+	thumb_2 = THUMB_URL_360 % url.split('/')[-1]
+	thumb_3 = THUMB_URL_ORIG % url.split('/')[-1]
+
+	published = html.xpath('//th[text()="Published"]/following-sibling::td/text()')
+
+	if len(published) > 0:
+		originally_available_at = Datetime.ParseDate(published[0]).date()
+	else:
+		originally_available_at = None
+
+	keywords = html.xpath('//meta[@name="keywords"]/@content')
+
+	if len(keywords) > 0:
+		tags = [tag.strip() for tag in keywords[0].split(',')]
+	else:
+		tags = []
 
 	return VideoClipObject(
 		title = title,
 		summary = summary,
-		thumb = Resource.ContentsOfURLWithFallback([thumb_1, thumb_2]),
+		thumb = Resource.ContentsOfURLWithFallback([thumb_1, thumb_2, thumb_3]),
+		originally_available_at = originally_available_at,
+		tags = tags,
 		content_rating = 'X'
 	)
 
