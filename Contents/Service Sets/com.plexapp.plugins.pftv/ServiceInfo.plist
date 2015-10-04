@@ -18,6 +18,13 @@
 				<string>^http:\/\/(www\.)?gorillavid\.in\/.+</string>
 			</array>
 		</dict>
+		<key>letwatch.us</key>
+		<dict>
+			<key>URLPatterns</key>
+			<array>
+				<string>^http:\/\/letwatch\.us\/\w{12}</string>
+			</array>
+		</dict>
 		<key>nosvideo.com</key>
 		<dict>
 			<key>URLPatterns</key>
