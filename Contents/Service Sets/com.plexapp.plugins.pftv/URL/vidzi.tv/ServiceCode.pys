@@ -88,8 +88,6 @@ def PlayVideo(url, **kwargs):
 Unpacker for Dean Edward's p.a.c.k.e.r
 """
 
-import re
-
 def unpack(source):
     """Unpacks P.A.C.K.E.R. packed js code."""
     payload, symtab, radix, count = filterargs(source)
