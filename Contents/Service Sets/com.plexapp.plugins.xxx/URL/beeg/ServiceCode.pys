@@ -1,9 +1,8 @@
+API_URL = 'http://beeg.com/api/v1/video/%s'
+
 THUMB_URL_720 = 'http://cdn.anythumb.com/1280x720/%s.jpg'
 THUMB_URL_360 = 'http://cdn.anythumb.com/640x360/%s.jpg'
 THUMB_URL_ORIG = 'http://cdn.anythumb.com/236x177/%s.jpg'
-
-RE_VIDEO_720 = Regex("'720p': '([^']+)'")
-RE_VIDEO_480 = Regex("'480p': '([^']+)'")
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -13,46 +12,26 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	try:
-		html = HTML.ElementFromURL(url)
-	except:
-		raise Ex.MediaNotAvailable
+	video_id = url.split('/')[-1]
+	json_obj = JSON.ObjectFromURL(API_URL % (video_id))
 
-	title = html.xpath('//title/text()')[0].split(' - beeg.')[0].strip()
-	summary = html.xpath('//td[contains(@class, "synopsis")]/text()')
+	title = json_obj['title']
+	summary = json_obj['desc']
+	originally_available_at = Datetime.ParseDate(json_obj['date']).date()
+	duration = int(json_obj['duration']) * 1000 if 'duration' in json_obj and json_obj['duration'] != '' else None
+	tags = [tag for tag in json_obj['tags'].split(', ')] if len(json_obj['tags']) > 0 else []
 
-	if len(summary) > 0:
-		if len(summary[0]) < 2:
-			summary = None
-		else:
-			summary = summary[0]
-	else:
-		summary = None
-
-	thumb_1 = THUMB_URL_720 % url.split('/')[-1]
-	thumb_2 = THUMB_URL_360 % url.split('/')[-1]
-	thumb_3 = THUMB_URL_ORIG % url.split('/')[-1]
-
-	published = html.xpath('//th[text()="Published"]/following-sibling::td/text()')
-
-	if len(published) > 0:
-		originally_available_at = Datetime.ParseDate(published[0]).date()
-	else:
-		originally_available_at = None
-
-	keywords = html.xpath('//meta[@name="keywords"]/@content')
-
-	if len(keywords) > 0:
-		tags = [tag.strip() for tag in keywords[0].split(',')]
-	else:
-		tags = []
+	thumb_1 = THUMB_URL_720 % (video_id)
+	thumb_2 = THUMB_URL_360 % (video_id)
+	thumb_3 = THUMB_URL_ORIG % (video_id)
 
 	return VideoClipObject(
 		title = title,
 		summary = summary,
-		thumb = Resource.ContentsOfURLWithFallback([thumb_1, thumb_2, thumb_3]),
 		originally_available_at = originally_available_at,
+		duration = duration,
 		tags = tags,
+		thumb = Resource.ContentsOfURLWithFallback([thumb_1, thumb_2, thumb_3]),
 		content_rating = 'X'
 	)
 
@@ -92,14 +71,14 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, res='720', **kwargs):
 
-	try:
-		data = HTTP.Request(url).content
-	except:
-		raise Ex.MediaNotAvailable
+	video_id = url.split('/')[-1]
+	json_obj = JSON.ObjectFromURL(API_URL % (video_id))
 
-	if res == '720' and RE_VIDEO_720.search(data):
-		return IndirectResponse(VideoClipObject, key=RE_VIDEO_720.search(data).group(1))
-	elif RE_VIDEO_480.search(data):
-		return IndirectResponse(VideoClipObject, key=RE_VIDEO_480.search(data).group(1))
+	if res == '720' and '720p' in json_obj:
+		video_url = json_obj['720p']
+	elif '480p' in json_obj:
+		video_url = json_obj['480p']
 	else:
 		raise Ex.MediaNotAvailable
+
+	return IndirectResponse(VideoClipObject, key=video_url.replace('{DATA_MARKERS}', 'data=pc.XX'))
