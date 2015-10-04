@@ -13,7 +13,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
 
 	title = html.xpath('//title/text()')[0].split(' - beeg.')[0].strip()
 	summary = html.xpath('//td[contains(@class, "synopsis")]/text()')
@@ -89,7 +92,10 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, res='720', **kwargs):
 
-	data = HTTP.Request(url).content
+	try:
+		data = HTTP.Request(url).content
+	except:
+		raise Ex.MediaNotAvailable
 
 	if res == '720' and RE_VIDEO_720.search(data):
 		return IndirectResponse(VideoClipObject, key=RE_VIDEO_720.search(data).group(1))
