@@ -102,6 +102,11 @@ def PlayRTMP(url, **kwargs):
 		raise Ex.MediaNotAvailable
 
 ####################################################################################################
+
+# Link old/removed function to PlayRTMP
+PlayHLS = PlayRTMP
+
+####################################################################################################
 def GetDetails(url, **kwargs):
 
 	channel = RE_CHANNEL.search(url).group(1)
