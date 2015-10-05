@@ -1,5 +1,5 @@
-RE_CHANNEL = Regex('http://www\.kanal([0-9]+)play\.se')
-RE_VIDEO_ID = Regex('/video/([0-9]+)')
+RE_CHANNEL = Regex('www\.kanal(\d+)play\.se')
+RE_VIDEO_ID = Regex('/video/(\d+)')
 
 API_URL  = 'http://www.kanal%splay.se/api/getVideo?format=FLASH&videoId=%s&withTheme=true'
 RSS_URLS = ['http://www.kanal%splay.se/rss?type=CLIP', 'http://www.kanal%splay.se/rss?type=PROGRAM']
@@ -104,17 +104,27 @@ def PlayRTMP(url, **kwargs):
 ####################################################################################################
 def GetDetails(url, **kwargs):
 
-	channel = RE_CHANNEL.search(url).groups()[0]
-	content = HTTP.Request(url).content
+	channel = RE_CHANNEL.search(url).group(1)
+	video_id = RE_VIDEO_ID.search(url)
+
+	if not video_id:
+
+		html = HTML.ElementFromURL(url)
+		og_url = html.xpath('//meta[@property="og:url"]/@content')
+
+		if len(og_url) < 1:
+			raise Ex.MediaNotAvailable
+
+		video_id = RE_VIDEO_ID.search(url)
+
+		if not video_id:
+			raise Ex.MediaNotAvailable
 
 	try:
-		vid_id = RE_VIDEO_ID.search(url).group(1)
+		json_obj = JSON.ObjectFromURL(API_URL % (channel, video_id.group(1)))
+		return json_obj
 	except:
-		data = HTML.ElementFromString(content)
-		og_url = data.xpath('//meta[@property="og:url"]/@content')[0]
-		vid_id = RE_VIDEO_ID.search(url).group(1)
-
-	return JSON.ObjectFromURL(API_URL % (channel, vid_id))
+		raise Ex.MediaNotAvailable
 
 ####################################################################################################
 def TestURLs():
