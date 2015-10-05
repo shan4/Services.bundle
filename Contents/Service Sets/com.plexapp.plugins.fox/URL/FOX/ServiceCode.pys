@@ -219,4 +219,14 @@ def ContentOfURL(url, cookies):
     headers['Cookie'] = cookies
     headers['User-Agent'] = USER_AGENT
 
-    return HTTP.Request(url, headers = headers, cacheTime = 0).content
+    try:
+        content = HTTP.Request(url, headers=headers, cacheTime=0).content
+    except Ex.HTTPError, e:
+        if e.code == 403:
+            raise Ex.MediaNotAuthorized
+        else:
+            raise Ex.MediaNotAvailable
+    except:
+        raise Ex.MediaNotAvailable
+
+    return content
