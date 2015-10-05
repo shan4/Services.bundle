@@ -11,7 +11,7 @@ EPISODES_URL = 'http://tve-atcnbce.nbcuni.com/live/3/nbce/containers/%s/iPad'
 #CLIPS_URL = 'http://tve-atcnbce.nbcuni.com/live/3/nbce/containers/%s/iPad?filterBy=clip'
 ###
 
-RE_VIDEO_ID = Regex('(nbc|latenightwithjimmyfallon|jaylenosgarage).com/((?!Vintage_Shows).+/)?video/.+?/(?P<id>n?\d{4,})')
+RE_VIDEO_ID = Regex('nbc.com/((?!Vintage_Shows).+/)?video/.+?/(?P<id>n?\d{4,})')
 RE_CLEANUP_TITLE = Regex('[^a-z0-9]+')
 
 AudioStreamObject.language_code = Locale.Language.English
