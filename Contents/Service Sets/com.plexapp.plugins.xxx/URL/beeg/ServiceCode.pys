@@ -1,8 +1,8 @@
 API_URL = 'http://beeg.com/api/v1/video/%s'
 
-THUMB_URL_720 = 'http://cdn.anythumb.com/1280x720/%s.jpg'
-THUMB_URL_360 = 'http://cdn.anythumb.com/640x360/%s.jpg'
-THUMB_URL_ORIG = 'http://cdn.anythumb.com/236x177/%s.jpg'
+THUMB_URL_720 = 'http://img.beeg.com/1280x720/%s.jpg'
+THUMB_URL_360 = 'http://img.beeg.com/640x360/%s.jpg'
+THUMB_URL_ORIG = 'http://img.beeg.com/236x177/%s.jpg'
 
 ####################################################################################################
 def NormalizeURL(url):
