@@ -7,7 +7,11 @@ RE_SEASON = Regex('Season (\d+):')
 def MetadataObjectForURL(url):
 
 	url = 'http://www.lstudio.com/xml/videos-page/%s' % url.split('lstudio.com/')[-1].replace('.html', '.xml')
-	xml = XML.ElementFromURL(url, cacheTime=CACHE_1DAY)
+
+	try:
+		xml = XML.ElementFromURL(url, cacheTime=CACHE_1DAY)
+	except:
+		raise Ex.MediaNotAvailable
 
 	show = xml.xpath('//video/seriesTitle/text()')[0]
 	episode_title = xml.xpath('//video/episodeTitle/text()')[0]
@@ -68,7 +72,11 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, fmt='hi', **kwargs):
 
 	url = 'http://www.lstudio.com/xml/videos-page/%s' % url.split('lstudio.com/')[-1].replace('.html', '.xml')
-	xml = XML.ElementFromURL(url, cacheTime=CACHE_1DAY)
+
+	try:
+		xml = XML.ElementFromURL(url, cacheTime=CACHE_1DAY)
+	except:
+		raise Ex.MediaNotAvailable
 
 	if fmt == 'hi' and len(xml.xpath('//video/videoHi')) > 0:
 		video_url = xml.xpath('//video/videoHi/text()')[0].replace('.f4v', '.mp4')
