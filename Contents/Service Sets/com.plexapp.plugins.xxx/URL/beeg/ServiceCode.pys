@@ -74,7 +74,7 @@ def PlayVideo(url, res='720', **kwargs):
 	video_id = url.split('/')[-1]
 	json_obj = JSON.ObjectFromURL(API_URL % (video_id))
 
-	if res == '720' and '720p' in json_obj:
+	if res == '720' and '720p' in json_obj and json_obj['720p']:
 		video_url = json_obj['720p']
 	elif '480p' in json_obj:
 		video_url = json_obj['480p']
