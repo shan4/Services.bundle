@@ -81,4 +81,7 @@ def PlayVideo(url, res='720', **kwargs):
 	else:
 		raise Ex.MediaNotAvailable
 
-	return IndirectResponse(VideoClipObject, key=video_url.replace('{DATA_MARKERS}', 'data=pc.XX'))
+	video_url = video_url.replace('{DATA_MARKERS}', 'data=pc.XX')
+	video_url = 'http://%s' % (video_url.split('//')[-1])
+
+	return IndirectResponse(VideoClipObject, key=video_url)
