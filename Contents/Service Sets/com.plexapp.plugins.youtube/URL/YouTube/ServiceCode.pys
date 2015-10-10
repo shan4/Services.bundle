@@ -31,10 +31,10 @@ def NormalizeURL(url):
 
   domain = url.netloc
 
-  # Edit mobile urls
-  if domain.startswith('m.'):
+  # Edit mobile urls and tv urls
+  if domain.startswith('m.') or ('/tv' in url.path and url.fragment != ''):
 
-    # Rewrite mobile urls that contain a hash
+    # Rewrite mobile urls and tv urls that contain a hash
     if url.fragment != '':
       url = urlparse.urlparse('https://www.youtube.com%s' % url.fragment)
 
