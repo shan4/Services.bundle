@@ -36,7 +36,7 @@ def MetadataObjectForURL(url):
 	if summary.startswith('xHamster'):
 		summary = None
 
-	thumb = html.xpath('//video/@poster')
+	thumb = html.xpath('//div[@class="noFlash"]//img/@src')
 	thumb = thumb[0] if len(thumb) > 0 else ''
 
 	return VideoClipObject(
