@@ -38,34 +38,37 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 def MediaObjectsForURL(url):
 
-	return [
-		MediaObject(
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			video_resolution = '720',
-			audio_codec = AudioCodec.AAC,
-			audio_channels = 2,
-			optimized_for_streaming = True if Client.Product not in ['Plex Web'] else False,
-			parts = [
-				PartObject(
-					key = Callback(PlayVideo, url=url, res='720')
-				)
-			]
-		),
-		MediaObject(
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			video_resolution = '480',
-			audio_codec = AudioCodec.AAC,
-			audio_channels = 2,
-			optimized_for_streaming = True if Client.Product not in ['Plex Web'] else False,
-			parts = [
-				PartObject(
-					key = Callback(PlayVideo, url=url, res='480')
-				)
-			]
-		)
-	]
+	if Client.Product == 'Plex Web':
+
+		return [
+			MediaObject(
+				video_resolution = video_resolution,
+				optimized_for_streaming = False,
+				parts = [
+					PartObject(
+						key = Callback(PlayVideo, url=url, res=video_resolution)
+					)
+				]
+			) for video_resolution in ['720', '480']
+		]
+
+	else:
+
+		return [
+			MediaObject(
+				container = Container.MP4,
+				video_codec = VideoCodec.H264,
+				video_resolution = video_resolution,
+				audio_codec = AudioCodec.AAC,
+				audio_channels = 2,
+				optimized_for_streaming = True,
+				parts = [
+					PartObject(
+						key = Callback(PlayVideo, url=url, res=video_resolution)
+					)
+				]
+			) for video_resolution in ['720', '480']
+		]
 
 ####################################################################################################
 @indirect
