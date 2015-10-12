@@ -15,7 +15,11 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
+
 	post_values = {}
 
 	for item in html.xpath('//form[@method="POST"]/input'):
@@ -67,7 +71,11 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, **kwargs):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
+
 	post_values = {}
 
 	for item in html.xpath('//form[@method="POST"]/input'):
