@@ -1,4 +1,5 @@
 VIDEO_URL = 'http://xhamster.com/movies/%s/.html'
+RE_JSON = Regex('sources:\s*(\{.+\}),')
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -50,32 +51,66 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 def MediaObjectsForURL(url):
 
-	return [
-		MediaObject(
-			parts = [
-				PartObject(key=Callback(PlayVideo, url=url))
-			],
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			video_resolution = 'sd',
-			audio_codec = AudioCodec.AAC,
-			audio_channels = 2,
-			optimized_for_streaming = True if Client.Product not in ['Plex Web'] else False
-		)
-	]
+	if Client.Product == 'Plex Web':
+
+		return [
+			MediaObject(
+				video_resolution = video_resolution,
+				optimized_for_streaming = False,
+				parts = [
+					PartObject(
+						key = Callback(PlayVideo, url=url, res=video_resolution)
+					)
+				]
+			) for video_resolution in ['720', '480']
+		]
+
+	else:
+
+		return [
+			MediaObject(
+				container = Container.MP4,
+				video_codec = VideoCodec.H264,
+				video_resolution = video_resolution,
+				audio_codec = AudioCodec.AAC,
+				audio_channels = 2,
+				optimized_for_streaming = True,
+				parts = [
+					PartObject(
+						key = Callback(PlayVideo, url=url, res=video_resolution)
+					)
+				]
+			) for video_resolution in ['720', '480']
+		]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, **kwargs):
+def PlayVideo(url, res='720', **kwargs):
 
 	try:
-		html = HTML.ElementFromURL(url)
+		data = HTTP.Request(url).content
 	except:
 		raise Ex.MediaNotAvailable
 
-	mp4_url = html.xpath('//div[@class="noFlash"]/a/@href')
+	json = RE_JSON.search(data)
 
-	if len(mp4_url) < 1:
-		raise Ex.MediaNotAvailable
+	if json:
 
-	return IndirectResponse(VideoClipObject, key=mp4_url[0])
+		json_obj = JSON.ObjectFromString(json.group(1))
+
+		if res == '720' and '720p' in json_obj:
+			video_url = json_obj['720p']
+		elif '480p' in json_obj:
+			video_url = json_obj['480p']
+		else:
+			raise Ex.MediaNotAvailable
+	else:
+
+		mp4_url = html.xpath('//div[@class="noFlash"]/a/@href')
+
+		if len(mp4_url) < 1:
+			raise Ex.MediaNotAvailable
+		else:
+			video_url = mp4_url[0]
+
+	return IndirectResponse(VideoClipObject, key=video_url)
