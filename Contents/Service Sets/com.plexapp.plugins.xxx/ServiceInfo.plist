@@ -4,25 +4,11 @@
 <dict>
 	<key>URL</key>
 	<dict>
-		<key>4tube</key>
-		<dict>
-			<key>URLPatterns</key>
-			<array>
-				<string>^http:\/\/www\.4tube\.com\/videos\/\d+</string>
-			</array>
-		</dict>
 		<key>beeg</key>
 		<dict>
 			<key>URLPatterns</key>
 			<array>
 				<string>^http:\/\/beeg\.com\/\d+</string>
-			</array>
-		</dict>
-		<key>FUX</key>
-		<dict>
-			<key>URLPatterns</key>
-			<array>
-				<string>^http:\/\/www\.fux\.com\/video\/\d+$</string>
 			</array>
 		</dict>
 		<key>RedTube</key>
