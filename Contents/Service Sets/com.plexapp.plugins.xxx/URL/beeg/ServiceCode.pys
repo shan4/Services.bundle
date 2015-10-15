@@ -19,7 +19,7 @@ def MetadataObjectForURL(url):
 	summary = json_obj['desc']
 	originally_available_at = Datetime.ParseDate(json_obj['date']).date()
 	duration = int(json_obj['duration']) * 1000 if 'duration' in json_obj and json_obj['duration'] != '' else None
-	tags = [tag for tag in json_obj['tags'].split(', ')] if len(json_obj['tags']) > 0 else []
+	tags = [tag for tag in json_obj['tags'].split(', ')] if json_obj['tags'] and len(json_obj['tags']) > 0 else []
 
 	thumb_1 = THUMB_URL_720 % (video_id)
 	thumb_2 = THUMB_URL_360 % (video_id)
