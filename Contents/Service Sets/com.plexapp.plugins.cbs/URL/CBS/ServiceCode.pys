@@ -38,7 +38,11 @@ def MetadataObjectForURL(url):
 
 	html = HTML.ElementFromString(page)
 
-	thumb = html.xpath('//meta[@property="og:image" and @content!=""]/@content|//meta[@name="twitter:image" and @content!=""]/@content')[0].replace('_140x80.jpg', '_640x360.jpg')
+	thumb = html.xpath('//meta[@property="og:image" and @content!=""]/@content|//meta[@name="twitter:image" and @content!=""]/@content')
+	if len(thumb) > 0:
+		thumb = thumb[0].replace('_140x80.jpg', '_640x360.jpg')
+	else:
+		thumb = ''
 
 	try:
 		air_date = html.xpath('//div[@class="airdate"]/text()')[0].replace('Air Date: ', '')
