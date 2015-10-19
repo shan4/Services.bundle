@@ -221,7 +221,7 @@ def GetRSS(url):
     else:
         html = HTML.ElementFromURL(url)
         # Pull the uri from the web page
-        uri = html.xpath('//link[@rel="video_src"]/@href')[0].split('/')[-1]
+        uri = html.xpath('//link[@rel="video_src" or @rel="image_src"]/@href')[0].split('/')[-1].split('?')[0]
 
     xml = XML.ElementFromURL(MRSS_URL % uri)
 
