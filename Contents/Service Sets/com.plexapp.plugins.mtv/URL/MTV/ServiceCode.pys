@@ -214,10 +214,10 @@ def GetRSS(url):
 
     # There is no longer any way to know whether a video clip is part of a playlist code
     # So we make all of them a videolist uri
-    if 'id=' in url:
+    if 'id=' in url and url.split('id=')[-1] != '':
         mgid_num = url.split('id=')[1]
         # if there is a playlist id, build a videolist type uri
-        uri = URI_FORMAT %mgid_num
+        uri = URI_FORMAT % mgid_num
     else:
         html = HTML.ElementFromURL(url)
         # Pull the uri from the web page
