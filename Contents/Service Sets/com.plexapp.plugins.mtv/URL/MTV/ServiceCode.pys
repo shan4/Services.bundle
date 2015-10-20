@@ -16,6 +16,14 @@ MediaObject.audio_channels = 2
 MediaObject.optimized_for_streaming = True
 
 ####################################################################################################
+def NormalizeURL(url):
+
+    if url.endswith('id='):
+        url = url.split('id=')[0]
+
+    return url
+
+####################################################################################################
 def MetadataObjectForURL(url):
 
     try:
@@ -214,7 +222,7 @@ def GetRSS(url):
 
     # There is no longer any way to know whether a video clip is part of a playlist code
     # So we make all of them a videolist uri
-    if 'id=' in url and url.split('id=')[-1] != '':
+    if 'id=' in url:
         mgid_num = url.split('id=')[1]
         # if there is a playlist id, build a videolist type uri
         uri = URI_FORMAT % mgid_num
