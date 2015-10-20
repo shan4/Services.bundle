@@ -18,8 +18,8 @@ MediaObject.optimized_for_streaming = True
 ####################################################################################################
 def NormalizeURL(url):
 
-    if url.endswith('id='):
-        url = url.split('id=')[0]
+    if url.endswith('#id='):
+        url = url.split('#id=')[0]
 
     return url
 
