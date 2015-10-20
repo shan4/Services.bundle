@@ -79,7 +79,7 @@ def MediaObjectsForURL(url):
             MediaObject(
                 video_resolution = int(item['plfile$height']),
                 audio_channels = int(item['plfile$audioChannels']),
-                bitrate = int(item['plfile$bitrate']),
+                bitrate = int(item['plfile$bitrate'] / 1000),
                 duration = int(item['plfile$duration'] * 1000),
                 video_frame_rate = int(item['plfile$frameRate']),
                 parts = [
