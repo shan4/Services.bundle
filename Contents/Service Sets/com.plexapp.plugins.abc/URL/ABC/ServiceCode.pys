@@ -24,9 +24,6 @@ def MetadataObjectForURL(url):
 	if len(og_url) < 1:
 		raise Ex.MediaNotAvailable
 
-	if 'Error' in html.xpath('//title/text()[1]|//h1/text()[last()]')[0]:
-		raise Ex.MediaNotAvailable
-
 	episode_title = html.xpath('//div[@class="video_title"]/text()|//h1/text()[last()]|//h2[@id="video_title"]/text()') # Xpath queries for: ABC|ABC Family|ABC News
 
 	if len(episode_title) < 1 or episode_title[0] == 'abcfamily.com':
