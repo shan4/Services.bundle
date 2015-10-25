@@ -19,7 +19,7 @@ def MetadataObjectForURL(url):
 
 	# Expired and unavailable media redirects to the home page. Instead of catching (multiple)
 	# redirects we check if there is a 'og:url' HTML element.
-	og_url = html.xpath('//meta[@property="og:url"]')
+	og_url = html.xpath('//meta[@name="og:url"]')
 
 	if len(og_url) < 1:
 		raise Ex.MediaNotAvailable
@@ -34,7 +34,7 @@ def MetadataObjectForURL(url):
 
 	episode_title = episode_title[0].strip()
 	show_title = html.xpath('//meta[@name="title"]/@content|//h2/a/text()')[0].split('  ')[0]
-	summary = html.xpath('//meta[@property="og:title"]/@content')[0]
+	summary = html.xpath('//meta[@name="og:title"]/@content')[0]
 
 	try:
 		sxx_exx = html.xpath('//title/text()')[0]
@@ -60,7 +60,7 @@ def MetadataObjectForURL(url):
 	except:
 		rating = None
 
-	thumb = html.xpath('//meta[@property="og:image"]/@content')[0]
+	thumb = html.xpath('//meta[@name="og:image"]/@content')[0]
 
 	if thumb == '':
 		video_id = GetVideoId(url)
