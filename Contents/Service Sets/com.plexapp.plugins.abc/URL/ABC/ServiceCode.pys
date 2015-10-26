@@ -40,16 +40,13 @@ def MetadataObjectForURL(url):
 		video_id = GetVideoId(url)
 		thumb = 'http://static.east.abc.go.com/service/image/ratio/id/VDKA%s/dim/1200.16x9.jpg' % (video_id)
 
-	source_title = 'ABC Family' if 'abcfamily' in url else 'ABC'
-
 	return EpisodeObject(
 		show = show_title,
 		title = episode_title,
 		season = int(season) if season else None,
 		index = int(index) if index else None,
 		summary = summary,
-		thumb = Resource.ContentsOfURLWithFallback(thumb),
-		source_title = source_title
+		thumb = Resource.ContentsOfURLWithFallback(thumb)
 	)
 
 ####################################################################################################
@@ -80,9 +77,6 @@ def MediaObjectsForURL(url):
 		if s in url:
 			storage_id = 1841
 			break
-
-	if 'abcfamily' in url:
-		storage_id = 1571
 
 	f4m_url = 'http://cdnapi.kaltura.com/p/585231/sp/58523100/playManifest/entryId/%s/format/http/protocol/http/cdnHost/cdnbakmi.kaltura.com/storageId/%d/uiConfId/8628152/tags/uplynk/a/a.f4m' % (video_id, storage_id)
 
