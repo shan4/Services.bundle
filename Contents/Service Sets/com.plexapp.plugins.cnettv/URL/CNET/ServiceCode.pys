@@ -65,7 +65,7 @@ def PlayVideo(url, **kwargs):
 def GetJSON(url):
 
 	html = HTML.ElementFromURL(url)
-	json = html.xpath('//div[@data-cnet-video-options]/@data-cnet-video-options')
+	json = html.xpath('//div[@data-cnet-video-uvp-options]/@data-cnet-video-uvp-options')
 
 	if len(json) < 1:
 		raise Ex.MediaNotAvailable
