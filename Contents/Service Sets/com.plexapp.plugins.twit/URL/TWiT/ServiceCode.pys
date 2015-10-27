@@ -21,7 +21,7 @@ def MetadataObjectForURL(url):
 	html = HTML.ElementFromString(data)
 
 	show = html.xpath('//meta[@property="og:title"]/@content')[0].split(' | ')[0].rsplit(' ',1)[0]
-	absolute_index = int(html.xpath('//meta[@property="og:title"]/@content')[0].split(' | ')[0].rsplit(' ',1)[1])
+	absolute_index = int(html.xpath('//meta[@property="og:url"]/@content')[0].split('/')[-1])
 
 	title = '%s %d' % (show, absolute_index)
 	summary = html.xpath('//h2[@class="subtitle"]/following-sibling::div[not(@class)][1]//text()')[0].strip()
