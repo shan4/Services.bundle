@@ -4,7 +4,9 @@ RE_VEVO_URL_PATH = Regex('http://www\.(?:mtv|vh1|cmt)\.com/videos?/([^/]+)/\d+/(
 RE_VEVO_ID = Regex('MTVN.Player.vevoVideoId = "(.+?)";')
 
 # Broke this into two parts in case we pull a full uri from the website code
-MRSS_URL = 'http://www.mtv.com/player/embed/AS3/rss/?uri=%s'
+MRSS_URL_PLAYER = 'http://www.mtv.com/player/embed/AS3/rss/?uri=%s'
+MRSS_URL_FEED = 'http://www.mtv.com/feeds/mrss?uri=%s'
+
 URI_FORMAT = 'mgid:uma:videolist:mtv.com:%s'
 
 RE_SERIES = Regex('.tvSeriesObj.title = "(.+?)";')
@@ -229,9 +231,12 @@ def GetRSS(url):
     else:
         html = HTML.ElementFromURL(url)
         # Pull the uri from the web page
-        uri = html.xpath('//link[@rel="video_src" or @rel="image_src"]/@href')[0].split('/')[-1].split('?')[0]
+        uri = html.xpath('//link[@rel="video_src" or @rel="image_src"]/@href|//div[contains(@class, "video_player") and @data-mgid]/@data-mgid')[0].split('/')[-1].split('?')[0]
 
-    xml = XML.ElementFromURL(MRSS_URL % uri)
+    if len(uri.split(':')[-1]) == 36:
+        xml = XML.ElementFromURL(MRSS_URL_FEED % uri)
+    else:
+        xml = XML.ElementFromURL(MRSS_URL_PLAYER % uri)
 
     if len(xml.xpath('//media:content[@medium="video"]', namespaces=NAMESPACES)) < 1:
         raise Ex.MediaNotAvailable
