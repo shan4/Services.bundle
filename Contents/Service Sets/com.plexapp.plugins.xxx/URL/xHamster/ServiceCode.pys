@@ -106,6 +106,7 @@ def PlayVideo(url, res='720', **kwargs):
 			raise Ex.MediaNotAvailable
 	else:
 
+		html = HTML.ElementFromString(data)
 		mp4_url = html.xpath('//div[@class="noFlash"]/a/@href')
 
 		if len(mp4_url) < 1:

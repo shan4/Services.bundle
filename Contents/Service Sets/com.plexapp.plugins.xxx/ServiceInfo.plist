@@ -22,7 +22,7 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http:\/\/(www\.)?xhamster\.com\/movies\/\d+\/.+\.html</string>
+				<string>^http:\/\/(www\.)?xhamster\.com\/movies\/\d+\/\w+\.html</string>
 				<string>^http:\/\/(www\.)?xhamster\.com\/xembed\.php\?video=\d+$</string>
 			</array>
 		</dict>
