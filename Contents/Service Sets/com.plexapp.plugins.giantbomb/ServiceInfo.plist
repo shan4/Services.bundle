@@ -12,7 +12,7 @@
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://(www\.)?giantbomb\.com/(videos|reviews)/[^/]+/\d+\-\d+</string>
+				<string>^http:\/\/(www\.)?giantbomb\.com\/(videos|reviews)\/[^\/]+\/\d+\-\d+</string>
 			</array>
 		</dict>
 	</dict>
