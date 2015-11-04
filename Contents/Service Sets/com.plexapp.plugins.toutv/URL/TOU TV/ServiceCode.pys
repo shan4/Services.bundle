@@ -12,7 +12,7 @@ MEDIA_URL = "http://api.radio-canada.ca/validationMedia/v1/Validation.html?appCo
 
 IPAD_HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 6_0_1 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A523 Safari/8536.25'}
 
-CLIENT_COMPAT_EHLS = ['iOS', 'Android', 'Safari'] #'Roku' should be able to handle the eHLS streams natively but for some reason cannot.
+CLIENT_COMPAT_EHLS = ['iOS', 'Android', 'Safari', 'tvOS'] #'Roku' should be able to handle the eHLS streams natively but for some reason cannot.
 
 SWF_URL = 'http://static.tou.tv/lib/ThePlatform/4.2.9c/swf/flvPlayer.swf'
 ####################################################################################################
