@@ -100,6 +100,9 @@ def PlayVideo(url, **kwargs):
 			if line.startswith('/'):
 				host = url.split('/')[2]
 				line = 'http://%s%s' % (host, line)
+			elif not line.startswith('http'):
+				rel_url = url.rsplit('/' ,1)[0]
+				line = '%s/%s' % (rel_url, line)
 
 			streams.append({
 				'bandwidth': int(bandwidth.group(1)),
