@@ -72,7 +72,7 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 def MediaObjectsForURL(url):
 
-	if Client.Platform in ['iOS', 'Android', 'Roku', 'Safari']:
+	if Client.Platform in ['iOS', 'Android', 'Roku', 'Safari', 'tvOS']:
 
 		return [
 			MediaObject(
