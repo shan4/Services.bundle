@@ -9,8 +9,6 @@ MRSS_URL_FEED = 'http://www.mtv.com/feeds/mrss?uri=%s'
 
 URI_FORMAT = 'mgid:uma:videolist:mtv.com:%s'
 
-RE_SERIES = Regex('.tvSeriesObj.title = "(.+?)";')
-
 NAMESPACES = {'media': 'http://search.yahoo.com/mrss/'}
 RE_RES_BIT = Regex('.+_\d{3,4}x(\d{3,4})_(\d{3,4})_(?:h|m)\d{2}.mp4$')
 
@@ -59,7 +57,7 @@ def MetadataObjectForURL(url):
 
     if 'playlist' in url:
 
-        show = RE_SERIES.search(content).group(1)
+        show = html.xpath('//meta[@property="sm4:category"]/@content')[0]
 
         return EpisodeObject(
             show = show,
