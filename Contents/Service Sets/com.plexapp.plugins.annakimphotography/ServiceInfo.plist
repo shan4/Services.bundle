@@ -8,11 +8,11 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://www\.annakimphotography\.com/blog/[^/]+/.+</string>
+				<string>^http:\/\/(www\.)?annakimphotography\.com\/[^\/]+\/.+</string>
 			</array>
 			<key>TestURLs</key>
 			<array>
-				<string>http://www.annakimphotography.com/blog/weddings/a-romantic-wedding-at-kaanapali-coffee-farms/</string>
+				<string>http://annakimphotography.com/wedding-photographs/a-romantic-wedding-at-kaanapali-coffee-farms/</string>
 			</array>
 		</dict>
 	</dict>

@@ -46,6 +46,12 @@ def GetPhotos(url):
 
 	for photo in html.xpath('//img[contains(@src, "/uploads/")]/@src'):
 
+		if not photo.startswith('http://'):
+			photo = 'http://annakimphotography.com%s' % (photo)
+
+		if '/blog/' in photo:
+			photo = photo.replace('/blog/', '/')
+
 		oc.add(PhotoObject(
 			key = photo,
 			title = String.DecodeHTMLEntities(title),
