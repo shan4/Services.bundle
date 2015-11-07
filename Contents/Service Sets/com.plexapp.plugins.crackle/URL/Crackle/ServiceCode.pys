@@ -101,6 +101,9 @@ def PlayVideo(url, **kwargs):
     media_id = RE_MEDIA_ID.search(url).group('media_id')
     xml = XML.ElementFromURL(DATA_URL % (media_id))
 
-    path = xml.xpath('//i/@p')[0]
+    path = xml.xpath('//i/@p')
 
-    return IndirectResponse(VideoClipObject, key=VIDEO_URL % (path))
+    if len(path) < 1:
+        raise Ex.MediaExpired
+
+    return IndirectResponse(VideoClipObject, key=VIDEO_URL % (path[0]))
