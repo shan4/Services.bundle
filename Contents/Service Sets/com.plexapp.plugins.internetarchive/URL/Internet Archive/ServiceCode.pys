@@ -348,7 +348,10 @@ def GetJSONData(url):
     else:
         json_url = url + '&output=json'
 
-    json_data = JSON.ObjectFromURL(json_url, cacheTime=CACHE_1MONTH)
+    try:
+        json_data = JSON.ObjectFromURL(json_url, cacheTime=CACHE_1MONTH)
+    except:
+        raise Ex.MediaNotAvailable
     
     return json_data
 
