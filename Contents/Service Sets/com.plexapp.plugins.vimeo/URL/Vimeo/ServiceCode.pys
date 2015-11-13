@@ -87,19 +87,18 @@ def MediaObjectsForURL(url):
 					key = Callback(PlayVideo, url=url, bitrate=bitrate, resolution=resolution)
 				)
 			],
-			bitrate = bitrate,
 			container = Container.MP4,
 			video_codec = VideoCodec.H264,
 			video_resolution = resolution,
 			audio_codec = AudioCodec.AAC,
 			audio_channels = 2,
 			optimized_for_streaming = True
-		) for bitrate, resolution in [(5000, '1080'), (2500, '720'), (900, '360')]
+		) for bitrate, resolution in ['1080', '720', '360']
 	]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate=5000, resolution='1080', **kwargs):
+def PlayVideo(url, resolution='1080', **kwargs):
 
 	if not url:
 		raise Ex.MediaNotAvailable
@@ -139,44 +138,20 @@ def PlayVideo(url, bitrate=5000, resolution='1080', **kwargs):
 		except:
 			raise Ex.MediaNotAvailable
 
-	if not 'h264' in json_obj['request']['files']:
-		raise Ex.MediaNotAvailable
-	else:
-		streams = json_obj['request']['files']['h264']
-
-	available_bitrates = []
+	streams = json_obj['request']['files']['progressive']
 	available_resolutions = []
 
-	# Bitrate or resolution info is missing sometimes. We try to find the best match based on
-	# bitrate first (if we have this info for all available versions). If bitrate info is missing
-	# for one or more versions of a video, we try to find the best match based on resolution.
-	for video in streams.keys():
+	for video in streams:
 
-		if video == 'mobile' and '.m3u8' in streams[video]['url']:
-			continue
+		if 'height' in video and video['height']:
+			available_resolutions.append(video['height'])
 
-		b = streams[video]['bitrate']
+	closest = min((abs(int(resolution) - int(i)), i) for i in available_resolutions)[1]
 
-		if b and b not in available_bitrates:
-			available_bitrates.append(b)
-
-		if streams[video]['height']:
-			available_resolutions.append(streams[video]['height'])
-
-	if len(set(available_bitrates)) == len(set(available_resolutions)):
-		closest = min((abs(int(bitrate) - int(i)), i) for i in available_bitrates)[1]
-
-		for video in streams.keys():
-			if closest == streams[video]['bitrate']:
-				video_url = streams[video]['url']
-				break
-	else:
-		closest = min((abs(int(resolution) - int(i)), i) for i in available_resolutions)[1]
-
-		for video in streams.keys():
-			if closest == streams[video]['height']:
-				video_url = streams[video]['url']
-				break
+	for video in streams:
+		if closest == video['height']:
+			video_url = video['url']
+			break
 
 	if video_url:
 		return IndirectResponse(VideoClipObject, key=video_url)
