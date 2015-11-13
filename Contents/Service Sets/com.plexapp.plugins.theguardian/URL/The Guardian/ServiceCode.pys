@@ -4,7 +4,11 @@ RE_THUMB = Regex('image:\s"(?P<thumb>[^"]+)')
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-    page_content = HTTP.Request(url).content
+    try:
+        page_content = HTTP.Request(url).content
+    except:
+        raise Ex.MediaNotAvailable
+
     page = HTML.ElementFromString(page_content)
 
     title = page.xpath("//meta[@property='og:title']")[0].get('content')
@@ -52,7 +56,10 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, **kwargs):
 
-    page_content = HTTP.Request(url).content
+    try:
+        page_content = HTTP.Request(url).content
+    except:
+        raise Ex.MediaNotAvailable
 
     # Find the src url
     video_url = RE_VIDEO.search(page_content)
