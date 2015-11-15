@@ -26,6 +26,7 @@ def MetadataObjectForURL(url):
 		raise Ex.MediaNotAvailable
 
 ####################################################################################################
+@deferred
 def MediaObjectsForURL(url):
 
 	external_source = GetExternalSource(url)
