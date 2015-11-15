@@ -1,4 +1,5 @@
 FEED_URL = "http://tpfeed.cbc.ca/f/ExhSPC/vms_5akSXx4Ng_Zn?q=*&byGuid=%s"
+FEED_URL_2 = "http://feed.theplatform.com/f/h9dtGB/dHMhf1eENFvm?pretty=true&form=json&&sort=title&fields=media$content,title,guid,media$thumbnails,:adOrder,id,:audioVideo,:liveOnDemand,pubDate&fileFields=plfile$url,plfile$duration&byContent=byReleases%3DbyId%253D"
 SMIL_PARAMS = "?manifest=m3u&feed=iOS%20News%20app%20feed&format=smil&mbr=true"
 AudioStreamObject.language_code = Locale.Language.English
 ####################################################################################################
@@ -41,8 +42,12 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayHLS(url):
 	vid = url.split('/')[-1]
-	feed = JSON.ObjectFromURL(FEED_URL % vid)
-	content_url = feed['entries'][0]['content'][0]['url']
+	try:
+		feed = JSON.ObjectFromURL(FEED_URL % vid)
+		content_url = feed['entries'][0]['content'][0]['url']
+	except:
+		feed = JSON.ObjectFromURL(FEED_URL_2 + vid)
+		content_url = feed['entries'][0]['media$content'][0]['plfile$url']
 	smil_url = content_url.split('?')[0] + SMIL_PARAMS
 	smil = XML.ElementFromURL(smil_url)
 	m3u8_url = smil.xpath('//a:video', namespaces={'a':"http://www.w3.org/2005/SMIL21/Language"})[0].get('src')
