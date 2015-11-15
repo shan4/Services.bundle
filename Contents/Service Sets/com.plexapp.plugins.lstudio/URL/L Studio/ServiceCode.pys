@@ -8,13 +8,12 @@ def GetExternalSource(url):
 
 	# Find the appropriate video source
 	html = HTML.ElementFromURL(url)
-	youtube_url = html.xpath('//figure[@class="video loading"]//iframe/@src')[0]
+	yt_iframe = html.xpath('//iframe[contains(@src, "youtube.com/embed")]/@src')
 
-	if 'www.youtube.com/embed/' in youtube_url:
-		youtube_id = youtube_url.split('embed/')[1]
-		return 'https://www.youtube.com/watch?v=%s' % (youtube_id)
-
-	return None
+	if len(yt_iframe) > 0:
+		return URLService.MetadataObjectForURL(yt_iframe[0])
+	else:
+		return None
 
 ####################################################################################################
 def MetadataObjectForURL(url):
@@ -27,7 +26,6 @@ def MetadataObjectForURL(url):
 		raise Ex.MediaNotAvailable
 
 ####################################################################################################
-@deferred
 def MediaObjectsForURL(url):
 
 	external_source = GetExternalSource(url)
