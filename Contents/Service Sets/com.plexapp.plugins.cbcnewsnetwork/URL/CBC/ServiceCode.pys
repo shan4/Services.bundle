@@ -20,7 +20,7 @@ def MetadataObjectForURL(url):
 		show = page.xpath('//meta[@property="video:series"]')[0].get('content')
 		title = "%s - %s" % (show, title)
 	
-	duration = int(page.xpath('//meta[@property="video:duration"]')[0].get('content'))
+	duration = int(page.xpath('//meta[@property="video:duration"]')[0].get('content'))*1000
 	
 	return VideoClipObject(
 		title 			= title,
