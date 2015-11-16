@@ -228,9 +228,22 @@ def GetRSS(url):
         uri = URI_FORMAT % mgid_num
     else:
         html = HTML.ElementFromURL(url)
-        # Pull the uri from the web page
-        uri = html.xpath('//link[@rel="video_src" or @rel="image_src"]/@href|//div[contains(@class, "video_player") and @data-mgid]/@data-mgid')[0].split('/')[-1].split('?')[0]
 
+        # Pull the uri from the web page, look for it in video or image source or video_player div
+        uri = html.xpath('//link[@rel="video_src" or @rel="image_src"]/@href|//div[contains(@class, "video_player") and @data-mgid]/@data-mgid')
+
+        if len(uri) > 0:
+            uri = uri[0].split('/')[-1].split('?')[0]
+        else:
+            # If uri not found, look for it in the share widget
+            uri = html.xpath('//div[@data-contenturi]/@data-contenturi')
+
+            if len(uri) > 0:
+                uri = uri[0].split('id::', 1)[-1].split('::')[0]
+            else:
+                raise Ex.MediaNotAvailable
+
+    # Check which feed to use
     if len(uri.split(':')[-1]) == 36:
         xml = XML.ElementFromURL(MRSS_URL_FEED % uri)
     else:
