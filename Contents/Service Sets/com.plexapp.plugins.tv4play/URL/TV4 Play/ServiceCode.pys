@@ -137,12 +137,12 @@ def GetURLs(id):
     is_live = IsLive(id)
     
     if not is_live:
-        if True:
+        try:
             xmlElement = XML.ElementFromURL(
                 url = API_VIDEO_URL % ('/api/web/asset/' + str(id) + '/play?protocol=hls&videoFormat=MP4+WEBVTTS'),
                 headers = headers
             )
-        else:
+        except:
             pass
     else:
         try:
