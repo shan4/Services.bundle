@@ -3,7 +3,7 @@ RE_VIMEO_ID = Regex('(\d{6,})')
 RE_CONTROL_CHARS = Regex(u'[\u0000-\u001F]')
 
 PLAYER_URL = 'https://player.vimeo.com/video/%s'
-RE_JSON = Regex(',a=(\{.+?h264.+?\});')
+RE_JSON = Regex('var t=(\{.+?\});')
 
 HTTP_HEADERS = {
 	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
@@ -31,11 +31,11 @@ def MetadataObjectForURL(url):
 			try:
 				page = HTTP.Request(PLAYER_URL % url.split('/')[-1]).content
 				json = RE_JSON.search(page).group(1)
-				json_obj = JSON.ObjectFromString(json)['video']
+				json_obj = JSON.ObjectFromString(json)
 
 				return VideoClipObject(
-					title = json_obj['title'],
-					thumb = Resource.ContentsOfURLWithFallback(json_obj['thumbs']['640'])
+					title = json_obj['video']['title'],
+					thumb = Resource.ContentsOfURLWithFallback(json_obj['video']['thumbs']['640'])
 				)
 
 			except:
@@ -84,7 +84,7 @@ def MediaObjectsForURL(url):
 		MediaObject(
 			parts = [
 				PartObject(
-					key = Callback(PlayVideo, url=url, bitrate=bitrate, resolution=resolution)
+					key = Callback(PlayVideo, url=url, resolution=resolution)
 				)
 			],
 			container = Container.MP4,
@@ -93,7 +93,7 @@ def MediaObjectsForURL(url):
 			audio_codec = AudioCodec.AAC,
 			audio_channels = 2,
 			optimized_for_streaming = True
-		) for bitrate, resolution in ['1080', '720', '360']
+		) for resolution in ['1080', '720', '360']
 	]
 
 ####################################################################################################
