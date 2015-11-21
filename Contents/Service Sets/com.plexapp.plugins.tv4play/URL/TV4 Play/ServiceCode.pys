@@ -3,8 +3,9 @@ from tv4play import Login
 RE_VIDEO_ID     = Regex('(?<=video_id=)[0-9]+')
 RE_SHOW_EPISODE = Regex('(.*) *(Del) *([0-9]+) *(.*)', Regex.IGNORECASE)
 
-API_BASE_URL  = 'https://prima.tv4play.se'
-API_VIDEO_URL = API_BASE_URL + '%s/play%s'
+API_METADATA_URL  = 'http://webapi.tv4play.se/play/video_assets/%s'
+API_VIDEO_URL = 'https://prima.tv4play.se/%s'
+
 PROXY_URL     = 'http://papi.tv4play.se/playback/hls/hlsproxy.m3u8?hlsurl=%s&subsurl=%s'
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17"
@@ -18,59 +19,41 @@ def MetadataObjectForURL(url):
         raise Ex.MediaNotAvailable
 
     try:
-        xmlElement = XML.ElementFromURL(API_BASE_URL + '/api/web/asset/' + str(id))
+        json_data = JSON.ObjectFromURL(API_METADATA_URL % str(id))
     except:
         raise Ex.MediaNotAvailable
 
     try:
-        if xmlElement.xpath("//asset//drmProtected/text()")[0].lower() == 'true':
+        if json_data['is_drm_protected']:
             raise Ex.MediaNotAvailable
     except:
         pass
 
-    try:
-        title = unicode(xmlElement.xpath("//asset//title/text()")[0])
-    except:
-        title = None
-             
-    try:
-        match   = RE_SHOW_EPISODE.search(title).groups()
-        show    = match[0]
-        episode = int(match[2])
-    except:
-        show    = None
-        episode = None
+    title = json_data['title'] if 'title' in json_data else None
+    
+    show = None
+    art = None
+    if 'program' in json_data:
+        show = json_data['program']['name'] if 'name' in json_data['program'] else None
+        art = json_data['program']['program_image'] if 'program_image' in json_data['program'] else None
 
-    try:  
-        summary = unicode(xmlElement.xpath("//asset//description/text()")[0])
-    except:
-        summary = None
-
-    try:    
-        thumb = "http://prima.tv4play.se/multimedia/vman/" + xmlElement.xpath("//asset//imageUrl/text()")[0]
-    except:
-        thumb = None  
-
-    try:
-        air_date = xmlElement.xpath("//asset//liveBroadcastTime/text()")[0].split('T')[0]
-        air_date = Datetime.ParseDate(air_date).date()
-    except:
-        air_date = None
-
-    try:
-        duration = xmlElement.xpath("//asset//duration/text()")[0]
-        duration = int(duration) * 1000 #millisecs
-    except:
-        duration = None
+    episode = int(json_data['episode']) if 'episode' in json_data else None
+    season = int(json_data['season']) if 'season' in json_data else None
+    summary = json_data['description'] if 'description' in json_data else None
+    thumb = json_data['image'] if 'image' in json_data else None
+    air_date = Datetime.ParseDate(json_data['broadcast_date_time'].split('T')[0]).date() if 'broadcast_date_time' in json_data else None
+    duration = int(json_data['duration']) * 1000 if 'duration' in json_data else None
 
     if show:  
         return EpisodeObject(
             show = show,
             title = title,
             index = episode,
+            season = season,
             summary = summary,
             duration = duration,
             thumb = thumb,
+            art = art,
             originally_available_at = air_date
         )
     else:
@@ -79,6 +62,7 @@ def MetadataObjectForURL(url):
             summary = summary,
             duration = duration,
             thumb = thumb,
+            art = art,
             originally_available_at = air_date
         )
 
@@ -153,17 +137,17 @@ def GetURLs(id):
     is_live = IsLive(id)
     
     if not is_live:
-        try:
+        if True:
             xmlElement = XML.ElementFromURL(
-                url = API_VIDEO_URL % ('/api/web/asset/' + str(id), '?protocol=hls&videoFormat=MP4+WEBVTTS'),
+                url = API_VIDEO_URL % ('/api/web/asset/' + str(id) + '/play?protocol=hls&videoFormat=MP4+WEBVTTS'),
                 headers = headers
             )
-        except:
+        else:
             pass
     else:
         try:
             xmlElement = XML.ElementFromURL(
-                url = API_VIDEO_URL % ('/api/html5/asset/' + str(id), '?videoFormat=livehls'),
+                url = API_VIDEO_URL % ('/api/html5/asset/' + str(id) + '/play?videoFormat=livehls'),
                 headers = headers
             ) 
         except: 
