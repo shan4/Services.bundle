@@ -1,8 +1,8 @@
-API_URL = 'http://vimeo.com/api/v2/video/%s.json'
+API_URL = 'https://vimeo.com/api/v2/video/%s.json'
 RE_VIMEO_ID = Regex('(\d{6,})')
 RE_CONTROL_CHARS = Regex(u'[\u0000-\u001F]')
 
-PLAYER_URL = 'http://player.vimeo.com/video/%s'
+PLAYER_URL = 'https://player.vimeo.com/video/%s'
 RE_JSON = Regex(',a=(\{.+?h264.+?\});')
 
 HTTP_HEADERS = {
@@ -15,7 +15,7 @@ def NormalizeURL(url):
 	vimeo_id = RE_VIMEO_ID.search(url)
 
 	if vimeo_id:
-		return 'http://vimeo.com/%s' % vimeo_id.group(1)
+		return 'https://vimeo.com/%s' % vimeo_id.group(1)
 
 ####################################################################################################
 def MetadataObjectForURL(url):
