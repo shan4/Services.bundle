@@ -4,11 +4,11 @@
 <dict>
 	<key>URL</key>
 	<dict>
-		<key>Kanal 5 Play</key>
+		<key>Dplay</key>
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://www\.kanal(5|9|11)play\.se/.+?/?video/.+</string>
+				<string>^http:\/\/www\.dplay\.se/.+</string>
 			</array>
 		</dict>
 	</dict>
