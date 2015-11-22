@@ -1,4 +1,5 @@
 RE_VIDEO_ID = Regex('\?p=(\d+)')
+DIRECT_PLAY_CLIENTS = ['Konvergo', 'iOS', 'Android', 'Roku', 'Mystery 4', 'Safari', 'tvOS']
 
 ####################################################################################################
 def MetadataObjectForURL(url):
@@ -57,14 +58,27 @@ def MediaObjectsForURL(url):
         if video_data['type'] == 'securehd':
             video_resolution = 1080
     
-    return [
-        MediaObject(
-            video_resolution = video_resolution,
-            audio_channels = 2,
-            optimized_for_streaming = True,
-            parts = [PartObject(key = HTTPLiveStreamURL(video_data['hls']))]
-        )
-    ]
+    if Client.Platform in DIRECT_PLAY_CLIENTS:
+        return [
+            MediaObject(
+                video_resolution = video_resolution,
+                audio_channels = 2,
+                optimized_for_streaming = True,
+                parts = [PartObject(key = HTTPLiveStreamURL(video_data['hls']))]
+            )
+        ]
+    else:
+        # Try to fool non direct play compatible clients to request transcoding
+        return [
+            MediaObject(
+                video_resolution = video_resolution,
+                audio_channels = 2,
+                optimized_for_streaming = False,
+                video_codec = 'hevc',
+                parts = [PartObject(key = video_data['hls'])]
+            )
+        ]
+        # ... unfortunately nothing can be done to fool PHT though
     
     
 ####################################################################################################
