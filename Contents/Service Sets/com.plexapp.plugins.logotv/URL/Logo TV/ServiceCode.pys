@@ -8,13 +8,15 @@ RE_RES_BIT = Regex('x(\d+)_(\d+)_?[^._]*\.(mp4|flv)')
 
 MediaObject.audio_channels = 2
 MediaObject.optimized_for_streaming = True
+
 ####################################################################################################
 def MetadataObjectForURL(url):
 
     try:
         content = HTTP.Request(url).content
         html = HTML.ElementFromString(content)
-    except: raise Ex.MediaNotAvailable
+    except:
+       raise Ex.MediaNotAvailable
 
     title = html.xpath('//meta[@property="og:title"]/@content')[0]
     summary = html.xpath('//meta[@property="og:description"]/@content')[0]
@@ -23,6 +25,7 @@ def MetadataObjectForURL(url):
 
     data = GetRSS(url)
     media_urls = data.xpath('//media:content[@medium="video"]', namespaces=NAMESPACES)
+
     for segment in media_urls:
         if segment.get('duration') != "":
             if ':' in segment.get('duration'):
@@ -38,14 +41,15 @@ def MetadataObjectForURL(url):
     if 'playlist' in url:
 
         show = RE_SERIES.search(content).group(1)
+
         return EpisodeObject(
             show = show,
-	    title = title,
-	    summary = summary,
-	    duration = duration,
-	    thumb = Resource.ContentsOfURLWithFallback(url=thumb),
-	    originally_available_at = originally_available_at
-	)
+            title = title,
+            summary = summary,
+            duration = duration,
+            thumb = Resource.ContentsOfURLWithFallback(url=thumb),
+            originally_available_at = originally_available_at
+        )
 
     else:
 
@@ -66,6 +70,7 @@ def MediaObjectsForURL(url):
     available_streams = {}
         
     for media_url in media_urls:
+
         try:
             video_data = XML.ElementFromURL(media_url, cacheTime=CACHE_1HOUR)
         except:
@@ -77,18 +82,26 @@ def MediaObjectsForURL(url):
             raise Ex.MediaNotAvailable
 
         for rendition in renditions:
+
             rtmp_url = rendition.xpath('./src/text()')[0]
+
             if '.flv' in rtmp_url:
                 continue
             # For video with incorrect fields, try to get the bitrate and height from the rtmp url first
             # Found one that was different, adjusted regex, but still best to put in a try/except
-            try: bitrate = RE_RES_BIT.search(rtmp_url).group(2)
-            except: bitrate = rendition.get('bitrate')
-            try: height = RE_RES_BIT.search(rtmp_url).group(1)
-            except: height = rendition.get('height')
+            try:
+                bitrate = RE_RES_BIT.search(rtmp_url).group(2)
+            except:
+                bitrate = rendition.get('bitrate')
+
+            try:
+                height = RE_RES_BIT.search(rtmp_url).group(1)
+            except:
+                height = rendition.get('height')
 
             if bitrate not in available_streams:
                 available_streams[bitrate] = []
+
             # Set up to pull the video file
             part = {}
             part['duration'] = rendition.get('duration')
