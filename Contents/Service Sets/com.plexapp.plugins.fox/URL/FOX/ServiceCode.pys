@@ -72,24 +72,37 @@ def MediaObjectsForURL(url):
 
         mo = []
 
-        return [
-            MediaObject(
-                video_resolution = video_resolution,
-                audio_channels = 2,
-                parts = [
-                    PartObject(
-                        key =
-                            HTTPLiveStreamURL(
-                                Callback(
-                                    PlayVideo,
-                                    url = video_url[0],
-                                    video_resolution = video_resolution
-                                )
+        if Client.Platform in ['Android', 'iOS', 'Roku', 'Safari', 'tvOS', 'Mystery 4', 'Konvergo']:
+            return [
+                MediaObject(
+                    video_resolution = 720,
+                    audio_channels = 2,
+                    parts = [
+                        PartObject(
+                            key = HTTPLiveStreamURL(url = video_url[0])
                         )
-                    )
-                ],
-            ) for video_resolution in ['720', '576', '360', '270', '226']   
-        ] 
+                    ],
+                )   
+            ]        
+        else:
+            return [
+                MediaObject(
+                    video_resolution = video_resolution,
+                    audio_channels = 2,
+                    parts = [
+                        PartObject(
+                            key =
+                                HTTPLiveStreamURL(
+                                    Callback(
+                                        PlayVideo,
+                                        url = video_url[0],
+                                        video_resolution = video_resolution
+                                    )
+                            )
+                        )
+                    ],
+                ) for video_resolution in ['720', '576', '360', '270', '226']   
+            ]
 
     raise Ex.MediaNotAvailable
 
