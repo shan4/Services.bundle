@@ -2,7 +2,6 @@ NAMESPACES = {"media":"http://search.yahoo.com/mrss/"}
 MRSS_URL = "http://www.logotv.com/player/includes/rss.jhtml?uri=%s"
 
 URI_FORMAT = 'mgid:uma:videolist:mtv.com:%s'
-RE_SERIES = Regex('.tvSeriesObj.title = "(.+?)";')
 
 RE_RES_BIT = Regex('x(\d+)_(\d+)_?[^._]*\.(mp4|flv)')
 
@@ -40,7 +39,7 @@ def MetadataObjectForURL(url):
 
     if 'playlist' in url:
 
-        show = RE_SERIES.search(content).group(1)
+        show = data.xpath('//title/text()', namespaces=NAMESPACES)[0]
 
         return EpisodeObject(
             show = show,
