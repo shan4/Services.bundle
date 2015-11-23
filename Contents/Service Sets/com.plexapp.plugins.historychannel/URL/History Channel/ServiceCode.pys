@@ -24,7 +24,7 @@ def MetadataObjectForURL(url):
         thumb = episode_data['thumbnailImage2xURL'] if 'thumbnailImage2xURL' in episode_data else None,
         show = episode_data['seriesName'],
         duration = episode_data['totalVideoDuration'],
-        originally_available_at = Datetime.ParseDate(episode_data['originalAirDate'].split('T')[0]).date(),
+        originally_available_at = Datetime.ParseDate(episode_data['originalAirDate'].split('T')[0]).date() if 'originalAirDate' in episode_data else None,
         index = int(episode_data['episode']) if 'episode' in episode_data else None,
         season = int(episode_data['season']) if 'season' in episode_data else None
     )
