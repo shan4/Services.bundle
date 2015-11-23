@@ -111,11 +111,7 @@ def PlayVideo(url, video_resolution = '720', **kwargs):
 
     hls_url = GetSpecificResolutionURL(url, video_resolution)
 
-    # We need to redirect to local PMS due to links
-    # are using SSL(https) with a missing certificate.
-    # (PMS doesn't care about this it seems)
-    # The domain missing a certificate is fbchdvod-f.akamaihd.net
-    # I guess the FOX iOS App has a built in exception for this domain?
+    # Use "proxy" for clients like PHT(lack of SSL support)
     return Redirect(
         Callback(CreatePatchedPlaylist, url = hls_url, cookies = HTTP.CookiesForURL(url))
     )
