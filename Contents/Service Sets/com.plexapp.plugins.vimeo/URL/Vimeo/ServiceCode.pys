@@ -84,21 +84,17 @@ def MediaObjectsForURL(url):
 		MediaObject(
 			parts = [
 				PartObject(
-					key = Callback(PlayVideo, url=url, resolution=resolution)
+					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url))
 				)
 			],
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			video_resolution = resolution,
-			audio_codec = AudioCodec.AAC,
-			audio_channels = 2,
-			optimized_for_streaming = True
-		) for resolution in ['1080', '720', '360']
+			video_resolution = '720',
+			audio_channels = 2
+		)
 	]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, resolution='1080', **kwargs):
+def PlayVideo(url, **kwargs):
 
 	if not url:
 		raise Ex.MediaNotAvailable
@@ -138,23 +134,10 @@ def PlayVideo(url, resolution='1080', **kwargs):
 		except:
 			raise Ex.MediaNotAvailable
 
-	streams = json_obj['request']['files']['progressive']
-	available_resolutions = []
-
-	for video in streams:
-
-		if 'height' in video and video['height']:
-			available_resolutions.append(video['height'])
-
-	closest = min((abs(int(resolution) - int(i)), i) for i in available_resolutions)[1]
-
-	for video in streams:
-		if closest == video['height']:
-			video_url = video['url']
-			break
-
-	if video_url:
-		return IndirectResponse(VideoClipObject, key=video_url)
+	if 'hls' in json_obj['request']['files']:
+		return IndirectResponse(VideoClipObject, key=json_obj['request']['files']['hls']['url'])
+	else:
+		raise Ex.MediaNotAvailable
 
 ####################################################################################################
 # Queue fix (PlayVideoIndirect was renamed to PlayVideo at some point)
