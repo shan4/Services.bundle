@@ -127,7 +127,10 @@ def PlayRecorded(url, **kwargs):
 	if not video_id:
 		raise Ex.MediaNotAvailable
 
-	json_obj = JSON.ObjectFromURL(USTREAM_REC_JSON % (video_id.group(1)))['video']
+	try:
+		json_obj = JSON.ObjectFromURL(USTREAM_REC_JSON % (video_id.group(1)))['video']
+	except:
+		raise Ex.MediaNotAvailable
 
 	if 'media_urls' in json_obj and 'flv' in json_obj['media_urls']:
 		return IndirectResponse(VideoClipObject, key=json_obj['media_urls']['flv'])
