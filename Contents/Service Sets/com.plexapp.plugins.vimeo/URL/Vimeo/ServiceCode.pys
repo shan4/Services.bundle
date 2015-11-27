@@ -87,7 +87,7 @@ def MediaObjectsForURL(url):
 					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url))
 				)
 			],
-			video_resolution = '720',
+			video_resolution = '1080',
 			audio_channels = 2
 		)
 	]
