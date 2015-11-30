@@ -1,5 +1,5 @@
-RE_FILE_URL = Regex("'file': '(http.+?)',?")
 BASE_URL = 'http://www.einthusan.com'
+CDN_URL = 'http://cdn.einthusan.com/geturl/%s/hd/London%%2CWashington%%2CToronto%%2CDallas%%2CSan%%2CSydney/'
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -10,27 +10,27 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	try:
-		content = HTML.ElementFromURL(url)
+		html = HTML.ElementFromURL(url)
 	except:
 		raise Ex.MediaNotAvailable
 
-	title = content.xpath('//a[@class="movie-title"]/text()')
+	title = html.xpath('//a[@class="movie-title"]/text()')
 
 	if len(title) < 1:
 		raise Ex.MediaNotAvailable
 
 	try:
-		thumb = content.xpath('//a[@class="movie-cover-wrapper"]/img/@src')[0]
+		thumb = html.xpath('//a[@class="movie-cover-wrapper"]/img/@src')[0]
 		if not thumb.startswith('http'):
 			thumb = '%s/%s' % (BASE_URL, thumb.split('/',1)[1])
 	except:
-		thumb = content.xpath('//div[@class="video-object-thumb"]/a/@src')[0]
+		thumb = html.xpath('//div[@class="video-object-thumb"]/a/@src')[0]
 		if not thumb.startswith('http'):
 			thumb = '%s/%s' % (BASE_URL, thumb.split('/',1)[1])
 	# for some strange reason einthusan sometimes uses urls with un-escaped spaces in them
 	thumb = thumb.replace(' ', '%20')
 
-	summary = content.xpath('//div[@class="movie-description"]//p[@class="desc_body"]/text()')[0]
+	summary = html.xpath('//div[@class="movie-description"]//p[@class="desc_body"]/text()')[0]
 
 	return VideoClipObject(
 		title = title[0],
@@ -49,58 +49,25 @@ def MediaObjectsForURL(url):
 			audio_codec = AudioCodec.AAC,
 			audio_channels = 2,
 			optimized_for_streaming = True,
-			parts = [PartObject(key=Callback(PlayVideo, url=url, res='hd'))]
-		),
-		MediaObject(
-			container = Container.MP4,
-			video_codec = VideoCodec.H264,
-			video_resolution = 'sd',
-			audio_codec = AudioCodec.AAC,
-			audio_channels = 2,
-			optimized_for_streaming = True,
-			parts = [PartObject(key=Callback(PlayVideo, url=url, res='sd'))]
+			parts = [
+				PartObject(key=Callback(PlayVideo, url=url))
+			]
 		)
 	]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, res, **kwargs):
+def PlayVideo(url, **kwargs):
 
-	# Blu-ray quality movies require login, which we can't handle from the bookmarklet.
-	if 'bluray=true' in url:
-		raise Ex.MediaNotAvailable
+	video_id = url.split('&id=')[-1].split('&')[0]
+	cdn_url = CDN_URL % (video_id)
 
 	try:
-		content = HTTP.Request(url).content
+		data = HTTP.Request(cdn_url).content
 	except:
 		raise Ex.MediaNotAvailable
 
-	video_files = RE_FILE_URL.findall(content)
-
-	if len(video_files) < 1:
-		raise Ex.MediaNotAvailable
-
-	if res == 'hd' and len(video_files) > 1:
-		video_url = video_files[1]
+	if data:
+		return IndirectResponse(VideoClipObject, key=data)
 	else:
-		video_url = video_files[0]
-
-	return IndirectResponse(VideoClipObject, key=video_url)
-
-####################################################################################################
-def TestURLs():
-
-	test_urls = []
-	data = HTML.ElementFromURL('%s/movies/' % BASE_URL)
-
-	for video in data.xpath('//div[@class="video-listing"]'):
-		link = video.xpath('.//a/@href')[0]
-
-		if not link.startswith('http'):
-			link = '%s/%s' % (BASE_URL, link.split('/',1)[1])
-		test_urls.append(link)
-
-		if len(test_urls) > 2:
-			break
-
-	return test_urls
+		raise Ex.MediaNotAvailable
