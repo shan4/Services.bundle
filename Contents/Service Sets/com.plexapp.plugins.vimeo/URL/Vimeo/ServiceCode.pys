@@ -134,7 +134,7 @@ def PlayVideo(url, **kwargs):
 		except:
 			raise Ex.MediaNotAvailable
 
-	if 'hls' in json_obj['request']['files']:
+	if 'files' in json_obj['request'] and 'hls' in json_obj['request']['files']:
 		return IndirectResponse(VideoClipObject, key=json_obj['request']['files']['hls']['url'])
 	else:
 		raise Ex.MediaNotAvailable
