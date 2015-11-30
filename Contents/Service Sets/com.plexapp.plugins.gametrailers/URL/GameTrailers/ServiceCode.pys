@@ -16,13 +16,15 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	try:
-		html = HTML.ElementFromURL(url)
+		html = HTML.ElementFromURL(url, follow_redirects=False)
 	except Ex.HTTPError, e:
 		if e.code == 404:
 			Log('HTTP 404 Not Found for URL: %s' % url)
 			raise Ex.MediaNotAvailable
 		else:
 			raise Ex.MediaNotAvailable
+	except Ex.RedirectError, e:
+		raise Ex.MediaNotAvailable
 	except:
 		raise Ex.MediaNotAvailable
 
