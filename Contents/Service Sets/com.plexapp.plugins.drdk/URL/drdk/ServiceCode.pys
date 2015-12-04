@@ -168,6 +168,9 @@ def PlayMedia(slug=None, url=None, **kwargs):
 		else:
 			dataResource = dataResource[0]
 
+			if dataResource.startswith('//'):
+				dataResource = 'http:%s' % (dataResource)
+
 		asset_json = JSON.ObjectFromURL(dataResource)['Data'][0]['Assets']
 
 		for data_asset in asset_json:
