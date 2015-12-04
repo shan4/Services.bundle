@@ -57,7 +57,7 @@ def MetadataObjectForURL(url):
 
     if 'playlist' in url:
 
-        show = html.xpath('//meta[@property="sm4:category"]/@content')[0]
+        show = html.xpath('//meta[@property="sm4:category"]/@content|//title/text()')[0].split(' | ')[0]
 
         return EpisodeObject(
             show = show,
