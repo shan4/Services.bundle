@@ -80,7 +80,7 @@ def PlayVideo(url, res='720', **kwargs):
 
 	for i in json_obj:
 		if i[0] == 'params':
-			json_obj = JSON.ObjectFromString(String.Unquote(i[1]))['video_data'][0]
+			json_obj = JSON.ObjectFromString(String.Unquote(i[1]))['video_data']['progressive'][0]
 			break
 
 	if not json_obj:
