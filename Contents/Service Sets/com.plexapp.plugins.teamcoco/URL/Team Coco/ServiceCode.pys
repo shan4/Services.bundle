@@ -156,7 +156,7 @@ def PlayVideo(url, res=720, **kwargs):
 ####################################################################################################
 def GetVideoId(url):
 
-	video_id = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//meta[@name="al:ios:url"]/@content')
+	video_id = HTML.ElementFromURL(url, cacheTime=CACHE_1HOUR).xpath('//meta[@property="al:ios:url"]/@content')
 
 	if len(video_id) > 0:
 		return video_id[0].split('=')[-1]
