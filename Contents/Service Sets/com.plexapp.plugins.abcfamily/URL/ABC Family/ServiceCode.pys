@@ -31,7 +31,8 @@ def MetadataObjectForURL(url):
 		season = None
 		index = None
 
-	thumb = html.xpath('//meta[@name="ogImageFromApi"]/@content')[0]
+	try: thumb = html.xpath('//meta[@name="ogImageFromApi"]/@content')[0]
+	except: thumb = html.xpath('//link[@rel="image_src"]/@href')[0]
 
 	return EpisodeObject(
 		show = show_title,
