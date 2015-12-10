@@ -20,15 +20,15 @@ def MetadataObjectForURL(url):
 	# Expired and unavailable media redirects to the home page. Instead of catching (multiple)
 	# redirects we check if there is a 'og:url' HTML element. 
 	# The meta tags for the data collected below may be either @name or @property.
-	og_url = html.xpath('//meta[@*="og:url"]/@content')
+	og_url = html.xpath('//meta[@name="og:url"]/@content|//meta[@property="og:url"]/@content')
 
 	if len(og_url) < 1:
 		raise Ex.MediaNotAvailable
 
 	show_info = html.xpath('//title/text()')[0]
 	show_title = show_info.split(':')[0]
-	summary = html.xpath('//meta[@*="og:description"]/@content')[0]
-	episode_title = html.xpath('//meta[@*="og:title"]/@content')[0].split(': ', 1)[-1].rsplit(' - ', 1)[0]
+	summary = html.xpath('//meta[@name="og:description"]/@content|//meta[@property="og:description"]/@content')[0]
+	episode_title = html.xpath('//meta[@name="og:title"]/@content|//meta[@property="og:title"]/@content')[0].split(': ', 1)[-1].rsplit(' - ', 1)[0]
 
 	try:
 		(season, index) = RE_SXX_EXX.search(show_info).groups()
@@ -36,7 +36,7 @@ def MetadataObjectForURL(url):
 		season = None
 		index = None
 
-	thumb = html.xpath('//meta[@*="og:image"]/@content')[0]
+	thumb = html.xpath('//meta[@name="og:image"]/@content|//meta[@property="og:image"]/@content')[0]
 
 	if thumb == '':
 		video_id = GetVideoId(url)
