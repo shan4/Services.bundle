@@ -17,12 +17,8 @@ def MediaObjectsForURL(url):
 ####################################################################################################
 def GetBrightCoveURL(url):
 
-	html = HTML.ElementFromURL(url, headers=HTTP_HEADERS, cacheTime=CACHE_1HOUR)
-
-	brightcove_url = html.xpath('//meta[@property="og:video"]/@content')[0]
-
-	player_id = brightcove_url.split('playerID=')[-1].split('&')[0]
-	video_id = brightcove_url.split('videoId=')[-1].split('&')[0]
+	player_id = '868996564001'
+	video_id = url.split('/')[-1]
 
 	return BC_URL % (player_id, video_id)
 
