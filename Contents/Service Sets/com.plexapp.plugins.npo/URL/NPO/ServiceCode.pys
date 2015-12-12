@@ -26,17 +26,17 @@ def MetadataObjectForURL(url):
 	if not player_id:
 		raise Ex.MediaNotAvailable
 
-	title = html.xpath('//meta[@name="og:title"]/@content')[0]
-	summary = html.xpath('//meta[@name="og:description"]/@content')[0]
+	title = html.xpath('//meta[@name="og:title"]/@content|//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="name"]/text()')[0]
+	summary = html.xpath('//meta[@name="og:description"]/@content|//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="description"]/text()')[0]
 	if summary.startswith('Geen omschrijving'): summary = None
 
 	try:
-		thumb = html.xpath('//meta[@name="og:image"]/@content')[0].split('?')[0].replace('.png', '.jpg')
+		thumb = html.xpath('//meta[@name="og:image"]/@content|//img[@class="background-image"]/@src')[0].split('?')[0].replace('.png', '.jpg')
 	except:
 		thumb = ''
 
 	try:
-		release_date = html.xpath('//meta[@name="og:video:release_date"]/@content')[0].split(' ')[0]
+		release_date = html.xpath('//meta[@name="og:video:release_date"]/@content|//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="startDate"]/text()')[0].split(' ')[0]
 		originally_available_at = Datetime.ParseDate(release_date).date()
 	except:
 		originally_available_at = None
