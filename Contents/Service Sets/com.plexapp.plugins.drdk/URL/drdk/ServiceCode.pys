@@ -148,11 +148,11 @@ def PlayMedia(slug=None, url=None, **kwargs):
 		for Links in PrimaryAsset['Links']:
 			if Links['Target'] == 'HLS':
 
-				values = {
-					"Id": slug,
-					"Client": "Plex.%s.%s" % (Client.Platform, Client.Version)
-				}
-				HTTP.Request(API_URL + 'reporting/viewed', values=values)
+				#values = {
+				#	"Id": slug,
+				#	"Client": "Plex.%s.%s" % (Client.Platform, Client.Version)
+				#}
+				#HTTP.Request(API_URL + 'reporting/viewed', values=values)
 
 				return IndirectResponse(EpisodeObject, key=Links['Uri'])
 
