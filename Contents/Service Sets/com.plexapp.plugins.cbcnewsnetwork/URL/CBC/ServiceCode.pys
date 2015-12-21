@@ -2,53 +2,64 @@ FEED_URL = "http://tpfeed.cbc.ca/f/ExhSPC/vms_5akSXx4Ng_Zn?q=*&byGuid=%s"
 FEED_URL_2 = "http://feed.theplatform.com/f/h9dtGB/dHMhf1eENFvm?pretty=true&form=json&&sort=title&fields=media$content,title,guid,media$thumbnails,:adOrder,id,:audioVideo,:liveOnDemand,pubDate&fileFields=plfile$url,plfile$duration&byContent=byReleases%3DbyId%253D"
 SMIL_PARAMS = "?manifest=m3u&feed=iOS%20News%20app%20feed&format=smil&mbr=true"
 AudioStreamObject.language_code = Locale.Language.English
+
 ####################################################################################################
 def NormalizeURL(url):
-	Log(url)
+
 	return url
 
 ####################################################################################################
 def MetadataObjectForURL(url):
-	page 	= HTML.ElementFromURL(url)
-	title 	= page.xpath('//meta[@property="og:title"]')[0].get('content')
-	summary = page.xpath('//meta[@property="og:description"]')[0].get('content')
-	thumb 	= page.xpath('//meta[@property="og:image"]')[0].get('content')
-	date 	= page.xpath('//meta[@property="video:release_date"]')[0].get('content')
-	
-	video_type 	= page.xpath('//meta[@property="og:type"]')[0].get('content')
+
+	page = HTML.ElementFromURL(url)
+
+	title = page.xpath('//meta[@property="og:title"]/@content')[0]
+	summary = page.xpath('//meta[@property="og:description"]/@content')[0]
+	thumb = page.xpath('//meta[@property="og:image"]/@content')[0]
+	date = page.xpath('//meta[@property="video:release_date"]/@content')[0]
+
+	video_type = page.xpath('//meta[@property="og:type"]/@content')[0]
+
 	if video_type == "video.episode":
-		show = page.xpath('//meta[@property="video:series"]')[0].get('content')
+		show = page.xpath('//meta[@property="video:series"]/@content')[0]
 		title = "%s - %s" % (show, title)
-	
-	duration = int(page.xpath('//meta[@property="video:duration"]')[0].get('content'))*1000
-	
+
+	duration = int(page.xpath('//meta[@property="video:duration"]/@content')[0])*1000
+
 	return VideoClipObject(
-		title 			= title,
-		summary			= summary,
+		title = title,
+		summary = summary,
 		originally_available_at	= Datetime.ParseDate(date).date(),
-		duration		= duration,
-		thumb			= thumb
+		duration = duration,
+		thumb = thumb
 	)
 
 ####################################################################################################
 def MediaObjectsForURL(url):
+
 	return [
 		MediaObject(
-			parts=[PartObject(key=HTTPLiveStreamURL(Callback(PlayHLS, url=url)))]
+			parts = [
+				PartObject(key=HTTPLiveStreamURL(Callback(PlayHLS, url=url)))
+			]
 		)
 	]
 
 ####################################################################################################
 @indirect
 def PlayHLS(url):
+
 	vid = url.split('/')[-1]
+
 	try:
 		feed = JSON.ObjectFromURL(FEED_URL % vid)
 		content_url = feed['entries'][0]['content'][0]['url']
 	except:
 		feed = JSON.ObjectFromURL(FEED_URL_2 + vid)
 		content_url = feed['entries'][0]['media$content'][0]['plfile$url']
+
 	smil_url = content_url.split('?')[0] + SMIL_PARAMS
 	smil = XML.ElementFromURL(smil_url)
-	m3u8_url = smil.xpath('//a:video', namespaces={'a':"http://www.w3.org/2005/SMIL21/Language"})[0].get('src')
+	m3u8_url = smil.xpath('//a:video/@src', namespaces={'a':'http://www.w3.org/2005/SMIL21/Language'})[0]
+
 	return IndirectResponse(VideoClipObject, key=m3u8_url)
