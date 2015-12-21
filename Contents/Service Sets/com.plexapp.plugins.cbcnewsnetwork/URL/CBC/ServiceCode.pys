@@ -60,6 +60,11 @@ def PlayHLS(url):
 
 	smil_url = content_url.split('?')[0] + SMIL_PARAMS
 	smil = XML.ElementFromURL(smil_url)
+
+	# Check for geoblock
+	if len(smil.xpath('//a:param[contains(@value, "Geo")]', namespaces={'a':'http://www.w3.org/2005/SMIL21/Language'})) > 0:
+		raise Ex.MediaGeoblocked
+
 	m3u8_url = smil.xpath('//a:video/@src', namespaces={'a':'http://www.w3.org/2005/SMIL21/Language'})[0]
 
 	return IndirectResponse(VideoClipObject, key=m3u8_url)
