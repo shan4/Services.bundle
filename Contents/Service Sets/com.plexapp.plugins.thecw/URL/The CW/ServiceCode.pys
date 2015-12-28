@@ -1,4 +1,4 @@
-DETAILS_URL = 'http://metaframe.digitalsmiths.tv/v2/CWtv/assets/%s/partner/53?format=json'
+DETAILS_URL = 'http://metaframe.digitalsmiths.tv/v2/CWtv/assets/%s/partner/132?format=json'
 BITRATES = [300, 500, 700, 900]
 BASE_URL = 'http://www.cwtv.com'
 
