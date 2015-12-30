@@ -5,6 +5,12 @@ RE_VPID = Regex('"vpid" *: *"(.+?)"')
 
 HLS_CLIENTS = ['Android', 'iOS', 'Roku', 'Safari', 'tvOS']
 
+STREAMS = {
+    1080: int(8582000/1024),
+    720: int(5476000/1024),
+    540: int(3083000/1024),
+    360: int(832000/1024)
+}
 ####################################################################################################
 def NormalizeURL(url):
 
@@ -131,22 +137,28 @@ def MediaObjectsForURL(url):
 
     media_selector_url = 'http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/format/json/mediaset/apple-ipad-hls/vpid/%s' % (vpid)
 
-    return [
-        MediaObject(
-            protocol = 'hls',
-            container = 'mpegts',
-            video_codec = VideoCodec.H264,
-            video_resolution = resolution,
-            audio_codec = AudioCodec.AAC,
-            audio_channels = 2,
-            optimized_for_streaming = True,
-            parts = [
-                PartObject(
-                    key = Callback(PlayVideo, post_url=media_selector_url, media_selector_url=media_selector_url, vpid=vpid, resolution=resolution, ext='m3u8')
-                )
-            ]
-        ) for resolution in ['1080', '720', '540', '396', '288']
-    ]
+    mo = []
+    for resolution in reversed(sorted(STREAMS)):
+        mo.append(
+            MediaObject(
+                protocol = 'hls',
+                container = 'mpegts',
+                video_codec = VideoCodec.H264,
+                video_resolution = resolution,
+                bitrate = STREAMS[resolution],
+                audio_codec = AudioCodec.AAC,
+                video_frame_rate = 25,
+                audio_channels = 2,
+                optimized_for_streaming = True,
+                parts = [
+                    PartObject(
+                        key = Callback(PlayVideo, post_url=media_selector_url, media_selector_url=media_selector_url, vpid=vpid, resolution=resolution, ext='m3u8')
+                    )
+                ]
+            )
+        )
+    
+    return mo
 
 ####################################################################################################
 @indirect
