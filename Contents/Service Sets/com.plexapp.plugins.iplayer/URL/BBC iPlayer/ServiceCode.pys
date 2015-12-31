@@ -3,7 +3,7 @@ HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) A
 RE_PID = Regex('iplayer/episode/([^/$]{8})')
 RE_VPID = Regex('"vpid" *: *"(.+?)"')
 
-HLS_CLIENTS = ['Android', 'iOS', 'Roku', 'Safari', 'tvOS']
+HLS_CLIENTS = ['Android', 'iOS', 'Roku', 'Safari', 'tvOS', 'Mystery 4', 'Konvergo']
 
 STREAMS = {
     1080: int(8582000/1024),
