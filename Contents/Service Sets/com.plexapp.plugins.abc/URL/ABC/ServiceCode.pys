@@ -22,7 +22,7 @@ def MetadataObjectForURL(url):
 	# The meta tags for the data collected below may be either @name or @property.
 	og_url = html.xpath('//meta[@name="og:url" or @property="og:url"]/@content')
 
-	if len(og_url) < 1:
+	if len(og_url) < 1 or og_url[0].endswith('abc.go.com') or og_url[0].endswith('abc.go.com/'):
 		raise Ex.MediaNotAvailable
 
 	show_info = html.xpath('//title/text()')[0]
