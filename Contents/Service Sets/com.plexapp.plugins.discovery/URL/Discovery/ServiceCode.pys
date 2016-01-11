@@ -12,44 +12,44 @@ def MetadataObjectForURL(url):
         pageElement = HTML.ElementFromURL(url)
     except:
         raise Ex.MediaNotAvailable
-    
+
     if 'apl.tv' in url:    
         title = pageElement.xpath('//meta[@property="og:title"]')[0].get('content')
-        
+
         try:
             summary = pageElement.xpath('//meta[@name="description"]')[0].get('content')
         except:
             summary = None
-            
+
         try:
             thumb = pageElement.xpath('//meta[@property="og:image"]')[0].get('content')
         except:
             thumb = None
-        
+
         return EpisodeObject(
             title = title,
             summary = summary,
             thumb = thumb
         )
-        
+
     else:   
         title = pageElement.xpath("//meta[@property='og:title']/@content")[0].strip()
-        
+
         try:
             show = pageElement.xpath("//head/@title")[0].split("|")[1].strip()
         except:
             show = None
-        
+
         try:
             summary = pageElement.xpath("//meta[@property='og:description']/@content")[0].strip()
         except:
             summary = None
-            
+
         try:
             thumb = pageElement.xpath("//meta[@property='og:image']/@content")[0].strip()
         except:
             thumb = None
-    
+
         return EpisodeObject(
             title = title,
             show = show,
@@ -62,13 +62,14 @@ def MetadataObjectForURL(url):
 def MediaObjectsForURL(url):
 
     if 'apl.tv' in url:
+
         try:
             pageElement = HTML.ElementFromURL(url, cacheTime = CACHE_1HOUR)
             videoUStreamURL = pageElement.xpath("//meta[@name='twitter:player']/@content")[0]
             videoID = videoUStreamURL.split("/")[-1]
         except:
             raise Ex.MediaNotAvailable
-        
+
         try:
             hlsurl = 'http://iphone-streaming.ustream.tv/ustreamVideo/%s/streams/live/playlist.m3u8' % videoID
             headers = HTTP.Request(url = hlsurl).headers
@@ -77,29 +78,27 @@ def MediaObjectsForURL(url):
 
         return [
             MediaObject(
-                audio_channels          = 2,
-                video_resolution        = 480,
+                audio_channels = 2,
+                video_resolution = 480,
                 optimized_for_streaming = True,
-                parts                   = [
-                    PartObject(
-                        key = HTTPLiveStreamURL(hlsurl)
-                    )
+                parts = [
+                    PartObject(key=HTTPLiveStreamURL(url=hlsurl))
                 ]
             )
         ]
-        
+
     else:
         return [
             MediaObject(
-                container               = Container.MP4,
-                video_codec             = VideoCodec.H264,
-                audio_codec             = AudioCodec.AAC,
-                audio_channels          = 2,
-                video_resolution        = '720',
+                container = Container.MP4,
+                video_codec = VideoCodec.H264,
+                audio_codec = AudioCodec.AAC,
+                audio_channels = 2,
+                video_resolution = '720',
                 optimized_for_streaming = True,
-                parts                   = [
+                parts = [
                     PartObject(
-                        key = Callback(PlayVideo, url = url)
+                        key = Callback(PlayVideo, url=url)
                     )
                 ]
             )
@@ -126,7 +125,4 @@ def PlayVideo(url, **kwargs):
         except:
             raise Ex.MediaNotAvailable
 
-    return IndirectResponse(
-        VideoClipObject,
-        key = video_url
-    )
+    return IndirectResponse(VideoClipObject, key=video_url)
