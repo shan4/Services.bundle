@@ -13,7 +13,11 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	data = HTTP.Request(url, headers=HTTP_HEADERS).content
+	try:
+		data = HTTP.Request(url, headers=HTTP_HEADERS).content
+	except:
+		raise Ex.MediaNotAvailable
+
 	html = HTML.ElementFromString(data)
 
 	if len(html.xpath('//p[text()="No Videos Found"]|//*[contains(text(), "temporarily unavailable")]')) > 0:
@@ -57,7 +61,15 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, **kwargs):
 
-	data = HTTP.Request(url, headers=HTTP_HEADERS).content
+	try:
+		data = HTTP.Request(url, headers=HTTP_HEADERS).content
+	except:
+		raise Ex.MediaNotAvailable
+
+	html = HTML.ElementFromString(data)
+
+	if len(html.xpath('//p[text()="No Videos Found"]|//*[contains(text(), "temporarily unavailable")]')) > 0:
+		raise Ex.MediaNotAvailable
 
 	try:
 		foldername = RE_FOLDERNAME.search(data).group('foldername')
