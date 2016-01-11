@@ -53,7 +53,11 @@ def MetadataObjectForURL(url):
 
 	elif RE_DRWEB.match(url):
 
-		page = HTML.ElementFromURL(url)
+		try:
+			page = HTML.ElementFromURL(url)
+		except:
+			raise Ex.MediaNotAvailable
+
 		dataResource = page.xpath("//div/@data-resource")
 
 		if len(dataResource) < 1:
@@ -71,12 +75,12 @@ def MetadataObjectForURL(url):
 
 			# Expired check
 			# Check for big future years first to prevent "OverflowError: mktime argument out of range" error on the node server
-			expired = False
-
 			if int(json['Data'][0]['PrimaryAssetEndPublish'].split('-')[0]) > Datetime.Now().year:
 				expired = False
 			elif Datetime.TimestampFromDatetime(Datetime.ParseDate(json['Data'][0]['PrimaryAssetEndPublish'])) < Datetime.TimestampFromDatetime(Datetime.Now()):
 				expired = True
+			else:
+				expired = False
 
 			if expired:
 				raise Ex.MediaExpired
