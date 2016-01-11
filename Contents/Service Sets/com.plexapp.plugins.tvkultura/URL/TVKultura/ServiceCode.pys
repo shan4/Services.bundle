@@ -51,7 +51,11 @@ def PlayVideo(url, **kwargs):
 def GetJSON(url):
 
 	id = RE_VIDEO_ID.search(url).group(1)
-	json_obj = JSON.ObjectFromURL(IFRAME_URL % id)['data']
+
+	try:
+		json_obj = JSON.ObjectFromURL(IFRAME_URL % id)['data']
+	except:
+		raise Ex.MediaNotAvailable
 
 	if not 'playlist' in json_obj:
 		html = HTML.ElementFromURL(url)
