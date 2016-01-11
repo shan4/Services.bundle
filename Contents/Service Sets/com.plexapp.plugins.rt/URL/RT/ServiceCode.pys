@@ -6,7 +6,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	html = HTML.ElementFromURL(url)
+	try:
+		html = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
 
 	# Check for video content
 	mp4_url = html.xpath('//meta[@itemprop="contentURL"]/@content')
