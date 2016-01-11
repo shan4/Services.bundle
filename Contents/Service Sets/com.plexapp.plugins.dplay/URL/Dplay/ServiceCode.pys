@@ -86,10 +86,10 @@ def GetVideoID(url):
     
     # First search the url
     video_id = None
-    match = RE_VIDEO_ID.search(url).groups()
-    
+    match = RE_VIDEO_ID.search(url)
+
     if match:
-        video_id = match[0]
+        video_id = match.group(1)
     else:
         # Try to get the video id via website instead
         try:
