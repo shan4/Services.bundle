@@ -51,8 +51,17 @@ def MediaObjectsForURL(url):
     timestamp = (int(Datetime.TimestampFromDatetime(Datetime.Now()))+3600)*1000
     dsc_geo = String.Quote('{"countryCode":"%s","expiry":%s}' % (geo_data['countryCode'], timestamp))
     headers = {'Cookie': 'dsc-geo=%s' % dsc_geo} 
-    video_data = JSON.ObjectFromURL('https://secure.dplay.se/secure/api/v2/user/authorization/stream/%s?stream_type=hls' % video_id, headers = headers)
-    
+
+    try:
+        video_data = JSON.ObjectFromURL('https://secure.dplay.se/secure/api/v2/user/authorization/stream/%s?stream_type=hls' % video_id, headers=headers)
+    except Ex.HTTPError, e:
+        if e.code == 403:
+            raise Ex.MediaGeoblocked
+        else:
+            raise Ex.MediaNotAvailable
+    except:
+        raise Ex.MediaNotAvailable
+
     video_resolution = 576
     if 'type' in video_data:
         if video_data['type'] == 'securehd':
