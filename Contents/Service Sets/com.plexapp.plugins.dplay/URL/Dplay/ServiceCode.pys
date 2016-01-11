@@ -48,7 +48,7 @@ def MediaObjectsForURL(url):
 
     video_id = GetVideoID(url)
     geo_data = JSON.ObjectFromURL('http://geo.dplay.se/geo.js')
-    timestamp = (int(Datetime.Now().strftime("%s"))+3600)*1000
+    timestamp = (int(Datetime.TimestampFromDatetime(Datetime.Now()))+3600)*1000
     dsc_geo = String.Quote('{"countryCode":"%s","expiry":%s}' % (geo_data['countryCode'], timestamp))
     headers = {'Cookie': 'dsc-geo=%s' % dsc_geo} 
     video_data = JSON.ObjectFromURL('https://secure.dplay.se/secure/api/v2/user/authorization/stream/%s?stream_type=hls' % video_id, headers = headers)
