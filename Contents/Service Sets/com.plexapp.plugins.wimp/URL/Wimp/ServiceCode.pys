@@ -12,7 +12,11 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	data = HTTP.Request(url, headers=HTTP_HEADERS).content
+	try:
+		data = HTTP.Request(url, headers=HTTP_HEADERS).content
+	except:
+		raise Ex.MediaNotAvailable
+
 	html = HTML.ElementFromString(data)
 
 	yt_iframe = html.xpath('//iframe[contains(@src, "youtube.com/embed")]/@src')
@@ -68,7 +72,12 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, **kwargs):
 
 	url = url.replace('http://www.', 'http://m.')
-	data = HTTP.Request(url, headers=HTTP_HEADERS_IPAD).content
+
+	try:
+		data = HTTP.Request(url, headers=HTTP_HEADERS_IPAD).content
+	except:
+		raise Ex.MediaNotAvailable
+
 	html = HTML.ElementFromString(data)
 
 	video = html.xpath('//video/@src|//video/source/@src')
