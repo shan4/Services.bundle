@@ -65,6 +65,9 @@ def PlayVideo(url, **kwargs):
     except:
         raise Ex.MediaExpired
 
+    if not 'channel' in json_obj:
+        raise Ex.MediaNotAvailable
+
     json_root = json_obj['channel']['item']
 
     # Redirect to the associated video url. It appears that some older videos are not MP4 but are FLVs
