@@ -9,12 +9,12 @@
 			<key>TestURLs</key>
 			<array>
 				<string>http://video.foxnews.com/#/v/1087515397001/fabio-sends-hearts-racing-on-red-eye/?playlist_id=87485</string>
-				<string>http://video.foxnews.com/v/1084986724001/us-debt-crisis-the-world-is-watching/?playlist_id=86857</string>
+					<string>http://video.foxnews.com/v/1084986724001/us-debt-crisis-the-world-is-watching/?playlist_id=86857</string>
 				<string>http://video.foxnews.com/v/1094428245001</string>
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http://video.foxnews.com(/#)?/v/[0-9]+.*</string>
+				<string>^http:\/\/video\.foxnews\.com(\/#)?\/v\/\d+</string>
 			</array>
 		</dict>
 	</dict>
