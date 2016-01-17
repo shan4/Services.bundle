@@ -99,6 +99,10 @@ def PlayVideo(url, bitrate, **kwargs):
 	videos = GetDetails(url)['videos']
 
 	for video in videos:
+
+		if videos[video]['bitrate'] == 'variable':
+			continue
+
 		available_bitrates.append(int(videos[video]['bitrate']))
 
 	closest = min((abs(int(bitrate) - int(i)), i) for i in available_bitrates)[1]
