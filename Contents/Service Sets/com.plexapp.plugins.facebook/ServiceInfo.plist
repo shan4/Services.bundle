@@ -15,7 +15,7 @@
 			<array>
 				<string>^https:\/\/www\.facebook\.com\/video\/video\.php\?v=\d+</string>
 				<string>^https:\/\/www\.facebook\.com\/[^\/]+\/videos\/\d+</string>
-				<string>^https?:\/\/www\.facebook\.com\/[^\/]+\/videos\/vb\.\d+\/\d+</string>
+				<string>^https:\/\/www\.facebook\.com\/[^\/]+\/videos\/vb\.\d+\/\d+</string>
 			</array>
 		</dict>
 	</dict>
