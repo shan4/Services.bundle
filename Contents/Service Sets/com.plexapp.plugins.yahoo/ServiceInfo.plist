@@ -8,7 +8,6 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^https?:\/\/((br|ca|de|es(\-us)?|fr|in|it|mx|uk)\.)?screen\.yahoo\.com/.+\-\d{9,}(-.+)?\.html</string>
 				<string>^https?:\/\/movies\.yahoo\.com\/(movie|video)\/.+</string>
 				<string>^https?:\/\/sports\.yahoo\.com\/video\/.+\-\d{9,}\.html</string>
 				<string>^https?:\/\/gma\.yahoo\.com\/video\/.+\-\d{9,}\.html</string>
@@ -16,7 +15,6 @@
 			</array>
 			<key>TestURLs</key>
 			<array>
-				<string>http://screen.yahoo.com/curious-cat-licks-vacuum-111005084.html</string>
 				<string>http://movies.yahoo.com/movie/battleship-2012/trailers/battleship-theatrical-trailer-27565489.html</string>
 			</array>
 		</dict>
