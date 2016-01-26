@@ -137,7 +137,7 @@ def GetJSON(url, content_id=None):
 	if not content_id:
 		raise Ex.MediaNotAvailable
 
-	if url.split('/')[2].split('.')[0] in ('screen', 'movies', 'gma', 'www'):
+	if url.split('/')[2].split('.')[0] in ('movies', 'gma', 'www'):
 		region = 'US'
 	else:
 		region = url.split('/')[2].split('.')[0].upper()
