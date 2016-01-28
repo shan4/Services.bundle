@@ -12,11 +12,11 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-    # Attempt to extract the details of the title from the page.
+    if '/series/' in url:
+        url = GetURL(url)
+
     html = HTML.ElementFromURL(url)
 
-    # Extract the details from the page
-    # We parse the document as HTML, so use lowercase only for attribute names
     title = html.xpath("//meta[@property='og:title']/@content")[0]
     description = html.xpath("//meta[@property='og:description']/@content")[0]
     thumb = html.xpath("//link[@rel='image_src']/@href|//meta[@property='og:image']/@content")[0].replace('.WidePromo.jpg', '.jpg')
@@ -66,6 +66,9 @@ def MediaObjectsForURL(url):
 ####################################################################################################
 def PlayVideo(url, file_ext, **kwargs):
 
+    if '/series/' in url:
+        url = GetURL(url)
+
     html = HTML.ElementFromURL(url)
 
     # Attempt to locate the ID of the video
@@ -96,3 +99,11 @@ def PlayVideo(url, file_ext, **kwargs):
             pass
 
     raise Ex.MediaNotAvailable
+
+####################################################################################################
+def GetURL(url):
+
+    html = HTML.ElementFromURL(url)
+    film_url = html.xpath('//a[contains(@href, "/film/")]/@href')[0]
+
+    return film_url
