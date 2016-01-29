@@ -108,6 +108,10 @@ def PlayVideo(url, bitrate, **kwargs):
 	closest = min((abs(int(bitrate) - int(i)), i) for i in available_bitrates)[1]
 
 	for video in videos:
+
+		if videos[video]['bitrate'] == 'variable':
+			continue
+
 		if closest == int(videos[video]['bitrate']):
 			rtmp_url = videos[video]['uri']
 			break
