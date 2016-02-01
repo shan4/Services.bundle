@@ -4,6 +4,7 @@ RE_CONTROL_CHARS = Regex(u'[\u0000-\u001F]')
 
 PLAYER_URL = 'https://player.vimeo.com/video/%s'
 RE_JSON = Regex('var t=(\{.+?\});')
+RE_CONFIG = Regex('window.vimeo.clip_page_config = (\{.+?\});')
 
 HTTP_HEADERS = {
 	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
@@ -102,8 +103,10 @@ def PlayVideo(url, **kwargs):
 	json_obj = None
 
 	try:
-		html = HTML.ElementFromURL(url, cacheTime=0, headers=HTTP_HEADERS)
-		config_url = html.xpath('//div[contains(@class, "player") and @data-config-url]/@data-config-url')[0].replace('&amp;', '&')
+		content = HTTP.Request(url, cacheTime=0, headers=HTTP_HEADERS).content
+		config_data = RE_CONFIG.search(content).group(1)
+		config_json = JSON.ObjectFromString(config_data)
+		config_url = config_json["player"]["config_url"]
 	except Ex.HTTPError, e:
 		if e.code == 403:
 			raise Ex.MediaNotAuthorized
