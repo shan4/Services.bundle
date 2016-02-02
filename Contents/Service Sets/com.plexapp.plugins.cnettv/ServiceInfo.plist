@@ -12,7 +12,7 @@
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^http:\/\/www\.cnet\.com/(uk/)?videos/.+</string>
+				<string>^http:\/\/www\.cnet\.com\/(.+\/)?videos\/.+</string>
 			</array>
 		</dict>
 	</dict>
