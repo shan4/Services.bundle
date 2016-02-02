@@ -1,5 +1,5 @@
 XL_URL = 'http://www.rtlxl.nl/#!/u/%s'
-XL_DATA_URL = 'http://www.rtl.nl/system/s4m/xldata/ux/%s?context=rtlxl&d=%s&ive&version=3&fmt=%s'
+XL_DATA_URL = 'http://www.rtl.nl/system/s4m/xldata/ux/%s?context=rtlxl&d=pc&ive&version=3&fmt=adaptive'
 
 THUMB_URL = 'http://data.rtl.nl/system/img//%s.jpg'
 
@@ -7,7 +7,6 @@ RE_UUID = Regex('(?P<uuid>[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12})')
 RE_SERIES_ID = Regex('/(?P<series_id>\d+)\.xml')
 
 HTTP_HEADERS_DESKTOP = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17'}
-HTTP_HEADERS_TABLET = {'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 6_0_1 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A523 Safari/8536.25'}
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -25,7 +24,7 @@ def MetadataObjectForURL(url):
 	if not uuid:
 		raise Ex.MediaNotAvailable
 
-	data_url = XL_DATA_URL % (uuid.group('uuid'), 'pc', 'adaptive')
+	data_url = XL_DATA_URL % (uuid.group('uuid'))
 	material_node = XML.ElementFromURL(data_url, headers=HTTP_HEADERS_DESKTOP, encoding='iso-8859-1').xpath('//material[@key="%s"]' % uuid.group('uuid'))
 
 	if len(material_node) < 1:
@@ -72,49 +71,28 @@ def MetadataObjectForURL(url):
 ####################################################################################################
 def MediaObjectsForURL(url):
 
-	if Client.Platform in ['iOS', 'Android', 'Roku', 'Safari', 'tvOS']:
-
-		return [
-			MediaObject(
-				video_resolution = '720',
-				audio_channels = 2,
-				optimized_for_streaming = True,
-				parts = [
-					PartObject(
-						key = HTTPLiveStreamURL(Callback(PlayVideo, url=url, hls=True))
-					)
-				]
-			)
-		]
-
-	else:
-
-		return [
-			MediaObject(
-				video_resolution = 'sd',
-				audio_channels = 2,
-				optimized_for_streaming = True,
-				parts = [
-					PartObject(
-						key = Callback(PlayVideo, url=url, hls=False)
-					)
-				]
-			)
-		]
+	return [
+		MediaObject(
+			video_resolution = '720',
+			audio_channels = 2,
+			optimized_for_streaming = True,
+			parts = [
+				PartObject(
+					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url))
+				)
+			]
+		)
+	]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, hls=True, **kwargs):
+def PlayVideo(url, **kwargs):
 
 	uuid = RE_UUID.search(url)
 	if not uuid:
 		raise Ex.MediaNotAvailable
 
-	if hls:
-		data_url = XL_DATA_URL % (uuid.group('uuid'), 'pc', 'adaptive')
-	else:
-		data_url = XL_DATA_URL % (uuid.group('uuid'), 'a2t', 'progressive')
-
+	data_url = XL_DATA_URL % (uuid.group('uuid'))
 	material_node = XML.ElementFromURL(data_url, headers=HTTP_HEADERS_DESKTOP, encoding='iso-8859-1').xpath('//material[@key="%s"]' % uuid.group('uuid'))
 
 	if len(material_node) < 1:
