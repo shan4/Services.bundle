@@ -9,6 +9,7 @@
 			<key>URLPatterns</key>
 			<array>
 				<string>^http:\/\/www\.aetv\.com\/shows\/[^\/]+\/video\/.+</string>
+				<string>^http:\/\/www\.aetv\.com\/shows\/[^\/]+\/season-\d{1,2}\/episode-\d{1,2}(.+)?</string>
 			</array>
 		</dict>
 	</dict>
