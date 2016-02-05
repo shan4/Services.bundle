@@ -4,8 +4,8 @@ RE_VEVO_URL_PATH = Regex('http://www\.(?:mtv|vh1|cmt)\.com/videos?/([^/]+)/\d+/(
 RE_VEVO_ID = Regex('MTVN.Player.vevoVideoId = "(.+?)";')
 
 # Broke this into two parts in case we pull a full uri from the website code
-MRSS_URL_PLAYER = 'http://www.mtv.com/player/embed/AS3/rss/?uri=%s'
-MRSS_URL_FEED = 'http://www.mtv.com/feeds/mrss?uri=%s'
+MRSS_URL_PLAYER = 'http://%s/player/embed/AS3/rss/?uri=%s'
+MRSS_URL_FEED = 'http://%s/feeds/mrss?uri=%s'
 
 URI_FORMAT = 'mgid:uma:videolist:mtv.com:%s'
 
@@ -144,6 +144,8 @@ def MediaObjectsForURL(url):
                     stream_url = rtmp_url.split('/viacommtvstrm/')[1]
                 elif '/mtvnorigin/' in rtmp_url:
                     stream_url = rtmp_url.split('/mtvnorigin/')[1]
+                elif '/viacomvh1strm/' in rtmp_url:
+                    stream_url = rtmp_url.split('/viacomvh1strm/')[1]
                 else:
                     # This means one of the parts failed. Could be a url format that is not mentioned above or could be a not avail url
                     Log('failed to split the rmtp_url to build the stream url. Its value is %s' %rtmp_url)
@@ -245,9 +247,9 @@ def GetRSS(url):
 
     # Check which feed to use
     if len(uri.split(':')[-1]) == 36:
-        xml = XML.ElementFromURL(MRSS_URL_FEED % uri)
+        xml = XML.ElementFromURL(MRSS_URL_FEED % (url.split('/')[2], uri))
     else:
-        xml = XML.ElementFromURL(MRSS_URL_PLAYER % uri)
+        xml = XML.ElementFromURL(MRSS_URL_PLAYER % (url.split('/')[2], uri))
 
     if len(xml.xpath('//media:content[@medium="video"]', namespaces=NAMESPACES)) < 1:
         raise Ex.MediaNotAvailable
