@@ -245,11 +245,17 @@ def GetRSS(url):
             else:
                 raise Ex.MediaNotAvailable
 
+    # Check which host to use
+    if 'vh1.com' in url:
+        host = 'www.vh1.com'
+    else:
+        host = 'www.mtv.com'
+
     # Check which feed to use
     if len(uri.split(':')[-1]) == 36:
-        xml = XML.ElementFromURL(MRSS_URL_FEED % (url.split('/')[2], uri))
+        xml = XML.ElementFromURL(MRSS_URL_FEED % (host, uri))
     else:
-        xml = XML.ElementFromURL(MRSS_URL_PLAYER % (url.split('/')[2], uri))
+        xml = XML.ElementFromURL(MRSS_URL_PLAYER % (host, uri))
 
     if len(xml.xpath('//media:content[@medium="video"]', namespaces=NAMESPACES)) < 1:
         raise Ex.MediaNotAvailable
