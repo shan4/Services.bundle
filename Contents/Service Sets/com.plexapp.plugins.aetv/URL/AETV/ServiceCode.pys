@@ -1,10 +1,11 @@
 from hashlib import sha1
 import binascii, hmac
 
-RE_PLAYLIST = Regex('aetv_video":(.+?)\}', Regex.DOTALL)
+RE_MEDIA_URL = Regex("var media_url = '(.+?)';", Regex.DOTALL)
 RE_BASE = Regex('meta base="(rtmp.+)"')
 
 SMIL_NS = {'a': 'http://www.w3.org/2005/SMIL21/Language'}
+SMIL_DETAILS = '?assetTypes=medium_video_ak&formats=m3u,mpeg4&format=SMIL'
 RESOLUTIONS = ['540','432','404','360']
 
 AudioStreamObject.language_code = Locale.Language.English
@@ -33,7 +34,7 @@ def TestURLs():
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-  releaseURL = '%s&format=script' % GetSMIL(url)
+  releaseURL = '%s?format=script' % GetSMIL(url)
   data = JSON.ObjectFromURL(releaseURL)
 
   thumb = data['defaultThumbnailUrl']
@@ -93,8 +94,7 @@ def PlayVideo(url, res, **kwargs):
 
   url = URLService.NormalizeURL(url)
 
-  smil_url = GetSMIL(url)
-  smil_url = smil_url.replace('switch=hds', 'format=SMIL')
+  smil_url = GetSMIL(url) + SMIL_DETAILS
   sig = sign_url(smil_url)
   smil_url = '%s&sig=%s' % (smil_url, sig)
 
@@ -125,7 +125,7 @@ def PlayVideo(url, res, **kwargs):
   if not video_url:
     raise Ex.MediaNotAvailable
 
-  if video_url.startswith('http://'):
+  if video_url.startswith('http://') or video_url.startswith('https://'):
     return IndirectResponse(VideoClipObject, key=video_url)
   elif video_url.startswith('flv:'):
     smil_string = HTTP.Request(smil_url).content
@@ -144,27 +144,17 @@ def PlayVideo(url, res, **kwargs):
 def GetSMIL(url):
 
   try:
-    content = HTTP.Request(url, follow_redirects=False).content.decode('utf8','replace')
+    content = HTTP.Request(url).content.decode('utf8','replace')
   except Ex.RedirectError, e:
     raise Ex.MediaNotAvailable
   except:
     raise Ex.MediaExpired
 
-  playlist = RE_PLAYLIST.search(content).group(1)
-  playlist = playlist + '}'
-  playlist = "[%s]" % playlist.strip().replace('\n', '')
-  playlist_json = JSON.ObjectFromString(playlist)
+  SMIL_URL = RE_MEDIA_URL.search(content).group(1)
+  html = HTML.ElementFromString(content)
+  blocked = html.xpath('//meta[@name="aetn:isBehindWall"]/@content')[0]
 
-  #Log('the value of playlist_json is %s' %playlist_json)
-  if not 'releaseURL' in playlist_json[0]:
-    raise Ex.MediaNotAvailable
-
-  SMIL_URL = '%s?%s' % (playlist_json[0]['releaseURL'], playlist_json[0]['flashReleaseUrlParams'])
-  info_url = '%s&format=script' % SMIL_URL
-  data = JSON.ObjectFromURL(info_url)
-  blocked = data['AETN$isBehindWall']
-
-  if blocked:
+  if blocked=='true':
     raise Ex.MediaNotAuthorized
   else:
     return SMIL_URL
