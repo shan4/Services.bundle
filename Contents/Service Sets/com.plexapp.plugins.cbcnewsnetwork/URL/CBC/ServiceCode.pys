@@ -11,7 +11,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	page = HTML.ElementFromURL(url)
+	try:
+		page = HTML.ElementFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
 
 	title = page.xpath('//meta[@property="og:title"]/@content')[0]
 	summary = page.xpath('//meta[@property="og:description"]/@content')[0]
