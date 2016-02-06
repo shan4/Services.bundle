@@ -56,6 +56,10 @@ def PlayHLS(url):
 		content_url = feed['entries'][0]['content'][0]['url']
 	except:
 		feed = JSON.ObjectFromURL(FEED_URL_2 + vid)
+
+		if not 'entries' in feed or len(feed['entries']) < 1:
+			raise Ex.MediaNotAvailable
+
 		content_url = feed['entries'][0]['media$content'][0]['plfile$url']
 
 	smil_url = content_url.split('?')[0] + SMIL_PARAMS
