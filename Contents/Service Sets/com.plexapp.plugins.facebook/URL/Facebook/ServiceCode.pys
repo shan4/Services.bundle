@@ -14,7 +14,13 @@ def MetadataObjectForURL(url):
 	if RE_AVAILABLE.search(page_content):
 		raise Ex.MediaNotAvailable
 
-	title = HTML.ElementFromString(page_content).xpath('//h2/text()|//span[@class="hasCaption"]/text()')[0]
+	title = HTML.ElementFromString(page_content).xpath('//h2/text()|//span[@class="hasCaption"]/text()')
+
+	if len(title) < 1:
+		title = 'Untitled'
+	else:
+		title = title[0]
+
 	duration = None
 	thumb = ''
 
