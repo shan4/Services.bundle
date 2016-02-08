@@ -31,18 +31,19 @@ def MetadataObjectForURL(url):
 	 	duration = smil.xpath('//a:switch[1]/a:ref/@dur', namespaces=SMIL_NS)[0].strip('ms')
 	except:
 		duration = 0
-		
- 	try: 
- 		summary = page.xpath("//div[contains(@class,'panel-col-last')]//div[contains(@class,'field-item even')]/text()")[0]
- 	except:
- 		pass
- 	
- 	# sometimes the above gives us either "" or "  " instead of failing
- 	if summary.strip() == "":
- 		try: 
- 			summary = page.xpath("//div[contains(@class,'panel-col-last')]//div[contains(@class,'field-item even')]//p/text()")[0]
- 		except:
- 			summary = None
+
+	try:
+		summary = page.xpath("//div[contains(@class,'panel-col-last')]//div[contains(@class,'field-item even')]/text()")[0]
+	except:
+		summary = ""
+
+	# sometimes the above gives us either "" or "  " instead of failing
+	if summary.strip() == "":
+
+		try:
+			summary = page.xpath("//div[contains(@class,'panel-col-last')]//div[contains(@class,'field-item even')]//p/text()")[0]
+		except:
+			summary = None
 
 	return VideoClipObject(
 		title = title,
