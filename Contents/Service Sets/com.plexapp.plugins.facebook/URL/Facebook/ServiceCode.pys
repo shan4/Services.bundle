@@ -1,4 +1,4 @@
-RE_JSON = Regex('(\[\["params".+)\.forEach')
+RE_JSON = Regex('\["params",\s*"(.+?)"\]')
 RE_AVAILABLE = Regex('currently unavailable', Regex.IGNORECASE)
 
 ####################################################################################################
@@ -25,15 +25,8 @@ def MetadataObjectForURL(url):
 	thumb = ''
 
 	json = RE_JSON.search(page_content).group(1)
-	json_obj = JSON.ObjectFromString(json)
-
-	for i in json_obj:
-		if i[0] == 'params':
-			json_obj = JSON.ObjectFromString(String.Unquote(i[1]))
-			break
-
-	if not json_obj:
-		raise Ex.MediaNotAvailable
+	json = json.decode('unicode-escape')
+	json_obj = JSON.ObjectFromString(String.Unquote(json))
 
 	thumb = ''
 	if 'thumbnail_src' in json_obj:
@@ -82,20 +75,15 @@ def PlayVideo(url, res='720', **kwargs):
 		raise Ex.MediaNotAvailable
 
 	json = RE_JSON.search(page_content).group(1)
-	json_obj = JSON.ObjectFromString(json)
+	json = json.decode('unicode-escape')
+	json_obj = JSON.ObjectFromString(String.Unquote(json))
 
-	for i in json_obj:
-		if i[0] == 'params':
-			json_obj = JSON.ObjectFromString(String.Unquote(i[1]))['video_data']['progressive'][0]
-			break
+	video_data = json_obj['video_data']['progressive'][0]
 
-	if not json_obj:
-		raise Ex.MediaNotAvailable
-
-	if res == '720' and 'hd_src' in json_obj and json_obj['hd_src'] is not None:
-		video_url = json_obj['hd_src']
-	elif 'sd_src' in json_obj and json_obj['sd_src'] is not None:
-		video_url = json_obj['sd_src']
+	if res == '720' and 'hd_src' in video_data and video_data['hd_src'] is not None:
+		video_url = video_data['hd_src']
+	elif 'sd_src' in video_data and video_data['sd_src'] is not None:
+		video_url = video_data['sd_src']
 	else:
 		raise Ex.MediaNotAvailable
 
