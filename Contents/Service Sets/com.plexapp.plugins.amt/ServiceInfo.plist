@@ -9,11 +9,11 @@
 			<key>TestURLs</key>
 			<array>
 				<string>http://trailers.apple.com/trailers/wb/greenlantern/</string>
-				<string>http://trailers.apple.com/trailers/sony_pictures/priest/</string>
+				<string>http://trailers.apple.com/trailers/universal/jasonbourne/</string>
 			</array>
 			<key>URLPatterns</key>
 			<array>
-				<string>^https?://(movie)?trailers\.apple\.com/trailers/[^/]+/.+</string>
+				<string>^https?:\/\/(movie)?trailers\.apple\.com\/trailers\/[^\/]+\/.+</string>
 			</array>
 		</dict>
 	</dict>

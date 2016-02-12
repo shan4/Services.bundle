@@ -1,68 +1,39 @@
-HTTP_HEADERS_VID = {
-	'User-Agent': 'AppleCoreMedia/1.0.0.12D78 (Macintosh; U; Intel Mac OS X 10_8_3; en_us)'
-}
-
-HTTP_HEADERS = {
-	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/536.30.1 (KHTML, like Gecko) Version/6.0.5 Safari/536.30.1'
-}
-
-ALL_VIDEOS_INC = '%s/includes/automatic.html'
-VIDEO_INC = '%s/includes/%s/automatic.html'
-VIDEO_INC_ALT = '%s/includes/%s/large.html'
-
-# 'h640w' is used as a fallback for older movies (it's not offered as an option in MediaObjectsForURL).
-QUALITY = ['h1080p', 'h720p', 'h480p', 'h640w']
-
-RE_URL_INFO = Regex('^https?://(?:movie)?trailers\.apple\.com/trailers/([^/]+)/([^/#]+)/?#?([^/]+)?$')
-RE_CONTROL_CHARS = Regex(u'[\u0000-\u001F]')
+MOVIE_JSON_URL = 'http://movietrailers.apple.com/trailers/%s/%s/data/page.json'
+RE_URL_INFO = Regex('^https?:\/\/(?:movie)?trailers\.apple\.com\/trailers\/([^\/]+)\/([^\/#]+)\/?#?([^\/]+)?$')
 
 ####################################################################################################
 def NormalizeURL(url):
 
-	url = url.replace('/iphone/', '/')
-	(studio, title, video) = RE_URL_INFO.findall(url)[0]
-	if not video: video = 'trailer'
+	(studio, movie_title, clip_type) = RE_URL_INFO.findall(url)[0]
 
-	return 'http://movietrailers.apple.com/trailers/%s/%s/#%s' % (studio, title, video)
+	if not clip_type:
+		clip_type = 'trailer'
+
+	return 'http://movietrailers.apple.com/trailers/%s/%s/#%s' % (studio, movie_title, clip_type)
 
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	video = FindVideoId(url)
+	(studio, movie_title, clip_type) = RE_URL_INFO.findall(url)[0]
+	json_obj = JSON.ObjectFromURL(MOVIE_JSON_URL % (studio, movie_title))
 
-	inc_html = HTML.ElementFromURL(ALL_VIDEOS_INC % url.split('/#')[0], headers=HTTP_HEADERS)
-	title = inc_html.xpath('//a[contains(@href, "/%s/")]/parent::li/parent::ul/preceding-sibling::h3/text()|//h4/text()' % video)[0]
+	title = json_obj['page']['movie_title']
+	summary = json_obj['details']['locale']['en']['synopsis']
 
-	try:
-		duration = inc_html.xpath('//a[contains(@href, "/%s/")]/p[contains(text(), "Runtime:")]/text()' % video)[0].split('Runtime:')[-1].strip()
-		duration = Datetime.MillisecondsFromString(duration)
-	except:
-		duration = None
+	clip_title = FindClip(url)
 
-	try:
-		originally_available_at = inc_html.xpath('//a[contains(@href, "/%s/")]/p[contains(text(), "Posted:")]/text()' % video)[0].split('Posted:')[-1].strip()
-		originally_available_at = Datetime.ParseDate(originally_available_at).date()
-	except:
-		originally_available_at = None
+	for clip in json_obj['clips']:
 
-	amt_html = HTTP.Request(url.split('#')[0], headers=HTTP_HEADERS).content
-	amt_html = RE_CONTROL_CHARS.sub('', amt_html)
-	amt_html = HTML.ElementFromString(amt_html)
-
-	movie_title = amt_html.xpath('//meta[@property="og:title"]/@content|//title/text()')[0].split(' - Movie Trailers')[0]
-	summary = amt_html.xpath('//meta[@property="og:description"]/@content|//meta[@name="Description"]/@content')[0]
-	summary = String.StripTags(summary)
-
-	thumb = amt_html.xpath('//meta[@property="og:image"]/@content|//img[contains(@src, "poster.jpg")]/@src')[0]
-	thumb = '%s/poster-xlarge.jpg' % thumb.rsplit('/', 1)[0]
-	thumb = thumb.replace('https://', 'http://').replace('trailers.apple.com', 'movietrailers.apple.com')
+		if clip['title'] == clip_title:
+			thumb = clip['screen'].replace('http://trailers.apple.com/', 'http://movietrailers.apple.com/')
+			duration = Datetime.MillisecondsFromString(clip['runtime'])
+			break
 
 	return MovieObject(
-		title = '%s (%s)' % (movie_title, title),
+		title = '%s (%s)' % (title, clip_title),
 		summary = summary,
-		duration = duration,
-		originally_available_at = originally_available_at,
-		thumb = Resource.ContentsOfURLWithFallback(thumb)
+		thumb = Resource.ContentsOfURLWithFallback(thumb),
+		duration = duration
 	)
 
 ####################################################################################################
@@ -70,15 +41,17 @@ def MediaObjectsForURL(url):
 
 	return [
 		MediaObject(
-			parts = [PartObject(key=Callback(PlayVideo, url=url, fmt='h%sp' % resolution))],
+			parts = [
+				PartObject(key=Callback(PlayVideo, url=url, fmt=resolution))
+			],
 			bitrate = bitrate,
-			container = Container.MOV,
+			container = Container.MP4,
 			video_codec = VideoCodec.H264,
 			video_resolution = resolution,
 			audio_codec = AudioCodec.AAC,
 			audio_channels = 2,
-			optimized_for_streaming = True if Client.Product == 'Plex Home Theater' else False
-		) for resolution, bitrate in [('1080', 10000), ('720', 5000), ('480', 1500)]
+			optimized_for_streaming = True
+		) for resolution, bitrate in [('1080', 10000), ('720', 5000), ('sd', 1500)]
 	]
 
 ####################################################################################################
@@ -88,69 +61,52 @@ def PlayVideo(url, fmt=None, **kwargs):
 	if fmt is None or url.split('.')[-1] in ('mov', 'm4v', 'mp4'):
 		return None
 
-	fmt = fmt.replace('HD ', 'h') # Keep backwards compatibility
-	video = FindVideoId(url)
+	(studio, movie_title, clip_type) = RE_URL_INFO.findall(url)[0]
+	json_obj = JSON.ObjectFromURL(MOVIE_JSON_URL % (studio, movie_title))
 
-	try:
-		html = HTML.ElementFromURL(VIDEO_INC % (url.split('/#')[0], video), headers=HTTP_HEADERS)
-	except:
-		html = HTML.ElementFromURL(VIDEO_INC_ALT % (url.split('/#')[0], video), headers=HTTP_HEADERS)
+	clip_title = FindClip(url)
 
-	video_url = html.xpath('//a[@class="movieLink"]/@href')
+	for clip in json_obj['clips']:
 
-	if len(video_url) < 1:
-		raise Ex.MediaNotAvailable
+		if clip['title'] == clip_title:
+			versions = clip['versions']['enus']['sizes']
+			break
+
+	if fmt == '1080' and 'hd1080' in versions:
+		video_url = versions['hd1080']['srcAlt']
+	elif fmt in ['1080', '720'] and 'hd720' in versions:
+		video_url = versions['hd720']['srcAlt']
+	elif fmt in ['1080', '720', 'sd'] and 'sd' in versions:
+		video_url = versions['sd']['srcAlt']
 	else:
-		video_url = video_url[0].rsplit('_' ,1)[0]
+		raise Ex.MediaNotAvailable
 
-	# Find the requested video quality or figure out what the next best available quality is
-	for i in range(QUALITY.index(fmt), len(QUALITY)):
-		final_url = '%s_%s.mov' % (video_url, QUALITY[i])
-		final_url = final_url.replace('http://trailers.apple.com/', 'http://movietrailers.apple.com/')
-
-		try:
-			test = HTTP.Request(final_url, headers=HTTP_HEADERS_VID, cacheTime=0).headers
-
-			return IndirectResponse(VideoClipObject,
-				key = final_url,
-				http_headers = HTTP_HEADERS_VID
-			)
-
-		except:
-			continue
-
-	raise Ex.MediaNotAvailable
+	return IndirectResponse(VideoClipObject, key=video_url)
 
 ####################################################################################################
-def FindVideoId(url):
+def FindClip(url):
 
-	(base_url, video) = url.split('/#')
+	(studio, movie_title, clip_type) = RE_URL_INFO.findall(url)[0]
+	json_obj = JSON.ObjectFromURL(MOVIE_JSON_URL % (studio, movie_title))
+	clip_type = String.Unquote(clip_type).lower()
 
-	try:
-		inc_html = HTML.ElementFromURL(ALL_VIDEOS_INC % base_url, headers=HTTP_HEADERS)
-	except:
-		raise Ex.MediaNotAvailable
-
-	# If there's only one video available, use that one
-	if len(inc_html.xpath('//a[contains(@href, "includes/") and (contains(@class, "block") or contains(@class, "link-play"))]/@href')) == 1:
-		video = inc_html.xpath('//a[contains(@href, "includes/") and (contains(@class, "block") or contains(@class, "link-play"))]/@href')[0].split('/')[1]
+	# If there's only one clip available, use that one
+	if len(json_obj['clips']) == 1:
+		return json_obj['clips'][0]['title']
 	else:
-		title = inc_html.xpath('//a[contains(@href, "includes/") and (contains(@class, "block") or contains(@class, "link-play")) and contains(@href, "/%s/")]/@href' % video)
+		for clip in json_obj['clips']:
+			if clip['title'].lower() == clip_type:
+				return clip['title']
 
-		if len(title) == 1:
-			video = title[0].split('/')[1]
-		elif len(title) < 1 and video != 'trailer':
+		if clip_type != 'trailer':
 			raise Ex.MediaNotAvailable
 		else:
 			# Fallback to 'trailer 2', 'theatrical trailer', 'international trailer', etc.
-			title = inc_html.xpath('//a[contains(@href, "includes/") and contains(@href, "trailer")]')
+			for clip in json_obj['clips']:
+				if 'trailer' in clip['title'].lower():
+					return clip['title']
 
-			if len(title) < 1:
-				raise Ex.MediaNotAvailable
-			else:
-				video = title[0].get('href').split('/')[1]
-
-	return video
+	raise Ex.MediaNotAvailable
 
 ####################################################################################################
 def GetThumb(**kwargs):
