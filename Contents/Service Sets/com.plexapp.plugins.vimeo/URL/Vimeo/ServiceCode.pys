@@ -85,17 +85,18 @@ def MediaObjectsForURL(url):
 		MediaObject(
 			parts = [
 				PartObject(
-					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url))
+					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url, bitrate=bitrate))
 				)
 			],
-			video_resolution = '1080',
+			video_resolution = resolution,
+			bitrate = bitrate,
 			audio_channels = 2
-		)
+		) for video_resolution, bitrate in [(1080, 6000), (720, 3000), (540, 1800), (360, 1000)]
 	]
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, **kwargs):
+def PlayVideo(url, bitrate, **kwargs):
 
 	if not url:
 		raise Ex.MediaNotAvailable
@@ -106,7 +107,7 @@ def PlayVideo(url, **kwargs):
 		content = HTTP.Request(url, cacheTime=0, headers=HTTP_HEADERS).content
 		config_data = RE_CONFIG.search(content).group(1)
 		config_json = JSON.ObjectFromString(config_data)
-		config_url = config_json["player"]["config_url"]
+		config_url = config_json['player']['config_url']
 	except Ex.HTTPError, e:
 		if e.code == 403:
 			raise Ex.MediaNotAuthorized
