@@ -96,7 +96,7 @@ def MediaObjectsForURL(url):
 
 ####################################################################################################
 @indirect
-def PlayVideo(url, bitrate, **kwargs):
+def PlayVideo(url, bitrate=6000, **kwargs):
 
 	if not url:
 		raise Ex.MediaNotAvailable
