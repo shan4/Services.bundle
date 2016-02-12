@@ -5,9 +5,10 @@ RE_CONTROL_CHARS = Regex(u'[\u0000-\u001F]')
 PLAYER_URL = 'https://player.vimeo.com/video/%s'
 RE_JSON = Regex('var t=(\{.+?\});')
 RE_CONFIG = Regex('window.vimeo.clip_page_config = (\{.+?\});')
+RE_BANDWIDTH = Regex('BANDWIDTH=(\d+).+?\n([^\n]+)')
 
 HTTP_HEADERS = {
-	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
+	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4'
 }
 
 ####################################################################################################
@@ -16,7 +17,7 @@ def NormalizeURL(url):
 	vimeo_id = RE_VIMEO_ID.search(url)
 
 	if vimeo_id:
-		return 'https://vimeo.com/%s' % vimeo_id.group(1)
+		return 'https://vimeo.com/%s' % (vimeo_id.group(1))
 
 ####################################################################################################
 def MetadataObjectForURL(url):
@@ -24,13 +25,13 @@ def MetadataObjectForURL(url):
 	json_obj = None
 
 	try:
-		json_obj = JSON.ObjectFromURL(API_URL % url.split('/')[-1], cacheTime=CACHE_1HOUR, headers=HTTP_HEADERS)[0]
+		json_obj = JSON.ObjectFromURL(API_URL % (url.split('/')[-1]), cacheTime=CACHE_1HOUR, headers=HTTP_HEADERS)[0]
 	except Ex.HTTPError, e:
 		if e.code == 403:
 			raise Ex.MediaNotAuthorized
 		elif e.code == 404:
 			try:
-				page = HTTP.Request(PLAYER_URL % url.split('/')[-1]).content
+				page = HTTP.Request(PLAYER_URL % (url.split('/')[-1])).content
 				json = RE_JSON.search(page).group(1)
 				json_obj = JSON.ObjectFromString(json)
 
@@ -88,7 +89,7 @@ def MediaObjectsForURL(url):
 					key = HTTPLiveStreamURL(Callback(PlayVideo, url=url, bitrate=bitrate))
 				)
 			],
-			video_resolution = resolution,
+			video_resolution = video_resolution,
 			bitrate = bitrate,
 			audio_channels = 2
 		) for video_resolution, bitrate in [(1080, 6000), (720, 3000), (540, 1800), (360, 1000)]
@@ -113,10 +114,9 @@ def PlayVideo(url, bitrate=6000, **kwargs):
 			raise Ex.MediaNotAuthorized
 		elif e.code == 404:
 			try:
-				page = HTTP.Request(PLAYER_URL % url.split('/')[-1]).content
+				page = HTTP.Request(PLAYER_URL % (url.split('/')[-1])).content
 				json = RE_JSON.search(page).group(1)
 				json_obj = JSON.ObjectFromString(json)
-
 			except:
 				raise Ex.MediaNotAvailable
 		else:
@@ -139,7 +139,27 @@ def PlayVideo(url, bitrate=6000, **kwargs):
 			raise Ex.MediaNotAvailable
 
 	if 'files' in json_obj['request'] and 'hls' in json_obj['request']['files']:
-		return IndirectResponse(VideoClipObject, key=json_obj['request']['files']['hls']['url'])
+
+		m3u8_master_url = json_obj['request']['files']['hls']['url']
+		m3u8_master = HTTP.Request(m3u8_master_url, cacheTime=0, headers=HTTP_HEADERS).content
+		available = {}
+
+		for match in RE_BANDWIDTH.findall(m3u8_master):
+
+			bandwidth = int(match[0])/1000
+			available[bandwidth] = match[1]
+
+		closest = min((abs(bitrate - i), i) for i in available.keys())[1]
+
+		if 'skyfire' in m3u8_master_url:
+			video_url = '%s/video/%s' % (m3u8_master_url.split('/video/')[0], available[closest].split('/video/')[1])
+		elif 'hls.vimeocdn.com' in m3u8_master_url:
+			video_url = '%s/%s' % (m3u8_master_url.rsplit('/', 1)[0], available[closest])
+		else:
+			Log('Unknown CDN...')
+			raise Ex.MediaNotAvailable
+
+		return IndirectResponse(VideoClipObject, key=video_url)
 	else:
 		raise Ex.MediaNotAvailable
 
