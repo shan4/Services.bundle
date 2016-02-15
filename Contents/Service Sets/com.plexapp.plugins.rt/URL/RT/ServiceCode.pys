@@ -1,3 +1,5 @@
+RE_VIDEO_URL = Regex('file:[^"]*"(.+\.mp4[^"]*)"')
+
 ####################################################################################################
 def NormalizeURL(url):
 
@@ -7,21 +9,20 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	try:
-		html = HTML.ElementFromURL(url)
+		data = HTTP.Request(url).content
 	except:
 		raise Ex.MediaNotAvailable
 
-	# Check for video content
-	mp4_url = html.xpath('//meta[@itemprop="contentURL"]/@content')
-
-	if len(mp4_url) < 1:
+	if not RE_VIDEO_URL.search(data):
 		raise Ex.MediaNotAvailable
+
+	html = HTML.ElementFromString(data)
 
 	title = html.xpath('//meta[@property="og:title"]/@content')[0]
 	summary = html.xpath('//meta[@name="description"]/@content')[0].strip()
 	thumb = html.xpath('//meta[@property="og:image"]/@content')[0]
 
-	published = html.xpath('//span[@class="time"]/text()')[0].strip()
+	published = html.xpath('//time[contains(@class, "date_article-header")]/text()')[0].strip()
 	if 'Published time: ' in published:
 		published = published.split(': ', 1)[-1]
 
@@ -53,12 +54,10 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, **kwargs):
 
-	html = HTML.ElementFromURL(url)
+	data = HTTP.Request(url).content
+	video_url = RE_VIDEO_URL.search(data)
 
-	# Check for video content
-	mp4_url = html.xpath('//meta[@itemprop="contentURL"]/@content')
-
-	if len(mp4_url) < 1:
+	if not video_url:
 		raise Ex.MediaNotAvailable
 
-	return IndirectResponse(VideoClipObject, key=mp4_url[0])
+	return IndirectResponse(VideoClipObject, key=video_url.group(1))
