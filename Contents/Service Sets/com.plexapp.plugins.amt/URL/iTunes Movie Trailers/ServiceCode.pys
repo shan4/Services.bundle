@@ -18,7 +18,11 @@ def MetadataObjectForURL(url):
 	json_obj = JSON.ObjectFromURL(MOVIE_JSON_URL % (studio, movie_title))
 
 	title = json_obj['page']['movie_title']
-	summary = json_obj['details']['locale']['en']['synopsis']
+
+	if 'synopsis' in json_obj['details']:
+		summary = json_obj['details']['synopsis']
+	else:
+		summary = json_obj['details']['locale']['en']['synopsis']
 
 	clip_title = FindClip(url)
 
