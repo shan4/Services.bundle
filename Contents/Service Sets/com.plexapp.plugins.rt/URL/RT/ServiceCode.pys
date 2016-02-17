@@ -13,10 +13,16 @@ def MetadataObjectForURL(url):
 	except:
 		raise Ex.MediaNotAvailable
 
-	if not RE_VIDEO_URL.search(data):
-		raise Ex.MediaNotAvailable
-
 	html = HTML.ElementFromString(data)
+
+	if not RE_VIDEO_URL.search(data):
+
+		ora_iframe = html.xpath('//iframe[contains(@src, "www.ora.tv/embed")]/@src')
+
+		if len(ora_iframe) < 1:
+			raise Ex.MediaNotAvailable
+		else:
+			return URLService.MetadataObjectForURL(ora_iframe[0])
 
 	title = html.xpath('//meta[@property="og:title"]/@content')[0]
 	summary = html.xpath('//meta[@name="description"]/@content')[0].strip()
