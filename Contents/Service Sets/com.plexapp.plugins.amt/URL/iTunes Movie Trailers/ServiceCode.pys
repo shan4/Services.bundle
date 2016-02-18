@@ -77,11 +77,23 @@ def PlayVideo(url, fmt=None, **kwargs):
 			break
 
 	if fmt == '1080' and 'hd1080' in versions:
-		video_url = versions['hd1080']['srcAlt']
+		if 'srcAlt' in versions['hd1080']:
+			video_url = versions['hd1080']['srcAlt']
+		else:
+			video_url = versions['hd1080']['src']
+
 	elif fmt in ['1080', '720'] and 'hd720' in versions:
-		video_url = versions['hd720']['srcAlt']
+		if 'srcAlt' in versions['hd720']:
+			video_url = versions['hd720']['srcAlt']
+		else:
+			video_url = versions['hd720']['src']
+
 	elif fmt in ['1080', '720', 'sd'] and 'sd' in versions:
-		video_url = versions['sd']['srcAlt']
+		if 'srcAlt' in versions['sd']:
+			video_url = versions['sd']['srcAlt']
+		else:
+			video_url = versions['sd']['src']
+
 	else:
 		raise Ex.MediaNotAvailable
 
