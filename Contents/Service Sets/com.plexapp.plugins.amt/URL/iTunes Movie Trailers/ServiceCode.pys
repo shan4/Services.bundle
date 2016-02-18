@@ -99,7 +99,7 @@ def FindClip(url):
 		return json_obj['clips'][0]['title']
 	else:
 		for clip in json_obj['clips']:
-			if clip['title'].lower() == clip_type:
+			if clip['title'].lower() == clip_type or clip['title'].lower().replace(' ', '') == clip_type:
 				return clip['title']
 
 		if clip_type != 'trailer':
