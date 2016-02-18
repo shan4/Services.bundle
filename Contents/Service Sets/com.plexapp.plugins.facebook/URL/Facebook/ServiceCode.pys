@@ -9,7 +9,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-	page_content = HTTP.Request(url).content
+	try:
+		page_content = HTTP.Request(url).content
+	except:
+		raise Ex.MediaNotAvailable
 
 	if RE_AVAILABLE.search(page_content):
 		raise Ex.MediaNotAvailable
@@ -68,7 +71,11 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, res='720', **kwargs):
 
-	page_content = HTTP.Request(url).content
+	try:
+		page_content = HTTP.Request(url).content
+	except:
+		raise Ex.MediaNotAvailable
+
 	video = None
 
 	if RE_AVAILABLE.search(page_content):
