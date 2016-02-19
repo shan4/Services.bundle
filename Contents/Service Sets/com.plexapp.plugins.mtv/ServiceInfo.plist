@@ -12,8 +12,7 @@
 				<string>^http:\/\/www\.(vh1|mtv|cmt)\.com\/shows\/.+\/\d{5,7}\/(playlist|video)\/(#id=\d{7})?</string>
 				<string>^http:\/\/www\.(vh1|mtv|cmt)\.com\/videos?\/.+\/\d{5,7}\/.+jhtml(.+id=\d{7})?</string>
 				<string>^http:\/\/www\.(vh1|mtv|cmt)\.com\/videos?\/(play.jhtml)?\?(.+|v)?id=\d{4,7}</string>
-				<string>^http:\/\/www\.mtvhive\.com\/videos?\/\d{6}\/</string>
-				<string>^http:\/\/www\.mtvhive\.com\/.+?\/\d{6}\/.+</string>
+				<string>^http:\/\/www\.mtv\.com\/artists\/.+\/videos\/.+\d{6,7}\/</string>
 			</array>
 		</dict>
 	</dict>

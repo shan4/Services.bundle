@@ -1,7 +1,7 @@
 # Variables for Vevo Music videos
 VEVO_URL = 'http://www.vevo.com/watch/%s/%s/%s'
 RE_VEVO_URL_PATH = Regex('http://www\.(?:mtv|vh1|cmt)\.com/videos?/([^/]+)/\d+/(.+?)\.jhtml')
-RE_VEVO_ID = Regex('MTVN.Player.vevoVideoId = "(.+?)";')
+RE_VEVO_ID = Regex("MTVN.VIDEO.isrc = '(.+?)';")
 
 # Broke this into two parts in case we pull a full uri from the website code
 MRSS_URL_PLAYER = 'http://%s/player/embed/AS3/rss/?uri=%s'
@@ -26,6 +26,10 @@ def NormalizeURL(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
 
+    vevo_url = VevoURL(url)
+    if vevo_url:
+        return URLService.MetadataObjectForURL(vevo_url)
+        
     try:
         content = HTTP.Request(url).content
         html = HTML.ElementFromString(content)
