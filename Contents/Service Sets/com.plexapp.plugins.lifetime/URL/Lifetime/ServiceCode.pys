@@ -1,17 +1,17 @@
-from hashlib import sha1
-import binascii, hmac
-
-RE_PLAYLIST = Regex('"videos":\[(.+?)"}\]},"', Regex.DOTALL)
+RE_MEDIA_URL = Regex("var media_url = '(.+?)';", Regex.DOTALL)
+RE_BASE = Regex('meta base="(rtmp.+)"')
 
 SMIL_NS = {'a': 'http://www.w3.org/2005/SMIL21/Language'}
+SMIL_DETAILS = '?assetTypes=medium_video_ak&formats=m3u,mpeg4&format=SMIL'
 RESOLUTIONS = ['720', '540', '432', '404', '360']
 
 AudioStreamObject.language_code = Locale.Language.English
+SIGNATURE_URL = 'http://servicesaetn-a.akamaihd.net/jservice/video/components/get-signed-signature?url=%s'
 
 ####################################################################################################
 def NormalizeURL(url):
 
-  return url.split('#')[0].split('?')[0]
+  return url.split('?')[0]
 
 ####################################################################################################
 def TestURLs():
@@ -19,7 +19,9 @@ def TestURLs():
   test_urls = []
   data = HTML.ElementFromURL('http://www.mylifetime.com/video')
 
-  for url in data.xpath('//div[contains(@class, "video-image-wrapper")]//a[starts-with(@href, "http")]/@href'):
+  for url in data.xpath('//ul[contains(@class,"full-episode-ul")]/li//a/@href'):
+    if not url.startswith('http:'):
+      url = 'http://www.mylifetime.com' + url
     test_urls.append(url)
 
     if len(test_urls) > 2:
@@ -30,42 +32,19 @@ def TestURLs():
 ####################################################################################################
 def MetadataObjectForURL(url):
 
-  # Not all input URLs are full URLs, grab the full URL
-  try:
-    url = HTML.ElementFromURL(url).xpath('//meta[@property="og:url"]/@content')[0]
-  except Ex.HTTPError, e:
-    if e.code == 403:
-      raise Ex.MediaNotAuthorized
-    else:
-      raise Ex.MediaNotAvailable
+  releaseURL = '%s?format=script' % GetSMIL(url)
+  data = JSON.ObjectFromURL(releaseURL)
 
-  video = GetJSON(url)
-
-  if 'pdk_flash_url' in video and video['pdk_flash_url']:
-    pdk_url = '%s&format=script' % video['pdk_flash_url']
-  elif 'release_url' in video and video['release_url']:
-    pdk_url = '%s&format=script' % video['release_url']
-  elif 'release_url_ak' in video and video['release_url_ak']:
-    pdk_url = '%s&format=script' % video['release_url_ak']
-  else:
-    raise Ex.MediaNotAvailable
-
-  data = JSON.ObjectFromURL(pdk_url)
-
-  title = data['title']
-  summary = data['description']
   thumb = data['defaultThumbnailUrl'] if 'defaultThumbnailUrl' in data else ''
+  summary = data['description']
   duration = data['duration']
   date = Datetime.FromTimestamp(float(data['pubDate'])/1000).date()
   content_rating = data['ratings'][0]['rating'] if len(data['ratings']) > 0 else None
+  title = data['title']
 
   if data['AETN$mrssLengthType'] == "Episode":
     show = data['AETN$seriesNameGlobal']
-
-    if 'AETN$episode' in data:
-      index = int(data['AETN$episode'])
-    else:
-      index = None
+    index = int(data['AETN$episode']) if 'AETN$episode' in data else None
 
     return EpisodeObject(
       title = title,
@@ -75,7 +54,7 @@ def MetadataObjectForURL(url):
       duration = duration,
       originally_available_at = date,
       content_rating = content_rating,
-      thumb = Resource.ContentsOfURLWithFallback(thumb)
+      thumb = Resource.ContentsOfURLWithFallback(url=thumb)
     )
   else:
     return VideoClipObject(
@@ -93,16 +72,15 @@ def MediaObjectsForURL(url):
   media_objects = []
 
   for res in RESOLUTIONS:
-
     media_objects.append(
       MediaObject(
         parts = [PartObject(key=Callback(PlayVideo, url=url, res=res))],
-        container = Container.MP4,
-        video_codec = VideoCodec.H264,
-        video_resolution = res,
-        audio_codec = AudioCodec.AAC
+          container = Container.MP4,
+          video_codec = VideoCodec.H264,
+          video_resolution = res,
+          audio_codec = AudioCodec.AAC
+        )
       )
-    )
 
   return media_objects
 
@@ -110,103 +88,71 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url, res, **kwargs):
 
-  try:
-    # Not all input URLs are full URLs, grab the full URL
-    url = HTML.ElementFromURL(url).xpath('//meta[@property="og:url"]/@content')[0]
-  except:
-    raise Ex.MediaNotAvailable
+  url = URLService.NormalizeURL(url)
 
-  video = GetJSON(url)
-
-  if 'pdk_flash_url' in video and video['pdk_flash_url']:
-    smil_url = video['pdk_flash_url'].replace('switch=rtmp', 'format=SMIL')
-  elif 'release_url' in video and video['release_url']:
-    smil_url = video['release_url'].split('?')[0]
-    smil_url = '%s?mbr=true&format=SMIL&assetTypes=medium_video_s3&metafile=true' % smil_url
-  elif 'release_url_ak' in video and video['release_url_ak']:
-    smil_url = video['release_url_ak'].split('?')[0]
-    smil_url = '%s?mbr=true&format=SMIL&assetTypes=medium_video_s3&metafile=true' % smil_url
-  else:
-    raise Ex.MediaNotAvailable
-
-  sig = sign_url(smil_url)
-  smil_url = '%s&sig=%s' % (smil_url, sig)
-
-  #Log('the value of smil_url is %s' %smil_url)
+  smil_url = GetSMIL(url)
+  signature = HTTP.Request(SIGNATURE_URL % String.Quote(smil_url)).content
+  smil_url = '%s%s&sig=%s' %(smil_url, SMIL_DETAILS, signature)
 
   smil = XML.ElementFromURL(smil_url)
-  available_res = smil.xpath("//a:video//@height", namespaces=SMIL_NS)
-
-  if len(available_res) < 1:
-    raise Ex.MediaNotAvailable
-
-  closest = min((abs(int(res) - int(i)), i) for i in available_res)[1]
+  index = RESOLUTIONS.index(res)
   video_url = None
 
   if smil.xpath('//a:ref', namespaces=SMIL_NS)[0].get('title') == "Geographic Restriction":
     raise Ex.MediaGeoblocked
-  video_url = smil.xpath('//a:video[@height="%s"]//@src' %closest, namespaces=SMIL_NS)[0]
+
+  while index < len(RESOLUTIONS):
+    for video in smil.xpath("//a:video", namespaces=SMIL_NS):
+      if video.get('height') == RESOLUTIONS[index]:
+        video_url = video.get('src')
+        break
+
+    index += 1
+
+    if video_url:
+      break
 
   # try falling back to the default //video/@src if we have one
   # (like for older style flv based videos)
   if not video_url:
     video_url = smil.xpath('//a:video/@src', namespaces=SMIL_NS)[0]
-  
+
   # now if we still don't have a video_url bail
   if not video_url:
     raise Ex.MediaNotAvailable
 
-  if video_url.startswith('http://'):
+  if video_url.startswith('http://') or video_url.startswith('https://'):
     return IndirectResponse(VideoClipObject, key=video_url)
-
-  raise Ex.MediaNotAvailable
+  elif video_url.startswith('flv:'):
+    smil_string = HTTP.Request(smil_url).content
+    rtmp_base = RE_BASE.search(smil_string).group(1)
+    rtmp_clip = video_url.replace("flv:","").replace(".flv?","?")
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_base, clip=rtmp_clip))
+  elif video_url.startswith('MP4:') or video_url.startswith('mp4:'):
+    smil_string = HTTP.Request(smil_url).content
+    rtmp_base = RE_BASE.search(smil_string).group(1)
+    rtmp_clip = video_url
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_base, clip=rtmp_clip))
+  else:
+    raise Ex.MediaNotAvailable
 
 ####################################################################################################
-def GetJSON(url):
+def GetSMIL(url):
 
   try:
     content = HTTP.Request(url).content.decode('utf8','replace')
+  except Ex.RedirectError, e:
+    raise Ex.MediaNotAvailable
   except:
     raise Ex.MediaExpired
 
-  # Movies and TV have different JSON data, so code for premium may vary
-  try:
-    playlist = RE_PLAYLIST.search(content).group(1)
-  except:
-    raise Ex.MediaNotAvailable
+  SMIL_URL = RE_MEDIA_URL.search(content).group(1)
+  html = HTML.ElementFromString(content)
+  blocked = html.xpath('//meta[@name="aetn:isBehindWall"]/@content')[0]
 
-  playlist = '%s"}' % playlist
-  playlist = '{"entries":[%s]}' % playlist
-  playlist_json = JSON.ObjectFromString(playlist)
+  if blocked=='true':
+    raise Ex.MediaNotAuthorized
+  else:
+    return SMIL_URL
 
-  for video in playlist_json['entries']:
-
-    if video['path'] in url:
-
-      blocked = video['is_premium'] if ('is_premium' in video and video['is_premium'] is not None) else '0'
-      blocked = video['video_behind_wall'] if ('video_behind_wall' in video and video['video_behind_wall'] is not None) else '0'
-
-      if blocked != '0':
-        raise Ex.MediaNotAvailable
-
-      return video
-
-####################################################################################################
-def sign_url(url):
-
-  hmac_key = 'crazyjava'
-  SEC_HEX = '733363723374' #'s3cr3t'
-  expiration = get_expiration()
-  path = url.split('http://link.theplatform.com/s/')[1].split('?')[0]
-  sign_data = binascii.unhexlify('00'+expiration+binascii.hexlify(path).lower())
-  sig = hmac.new(hmac_key, sign_data, sha1)
-  sigHEX = sig.hexdigest()
-  signature = '00' + expiration + sigHEX + SEC_HEX
-  return signature
-
-####################################################################################################
-def get_expiration(auth_length=600):
-
-  current_time = Datetime.TimestampFromDatetime(Datetime.Now()) + auth_length
-  expiration = ('%0.2X' % current_time).lower()
-  return expiration
+  raise Ex.MediaNotAvailable
