@@ -1,6 +1,3 @@
-from hashlib import sha1
-import binascii, hmac
-
 RE_MEDIA_URL = Regex("var media_url = '(.+?)';", Regex.DOTALL)
 RE_BASE = Regex('meta base="(rtmp.+)"')
 
@@ -9,7 +6,7 @@ SMIL_DETAILS = '?assetTypes=medium_video_ak&formats=m3u,mpeg4&format=SMIL'
 RESOLUTIONS = ['540','432','404','360']
 
 AudioStreamObject.language_code = Locale.Language.English
-
+SIGNATURE_URL = 'http://servicesaetn-a.akamaihd.net/jservice/video/components/get-signed-signature?url=%s'
 ####################################################################################################
 def NormalizeURL(url):
 
@@ -94,9 +91,9 @@ def PlayVideo(url, res, **kwargs):
 
   url = URLService.NormalizeURL(url)
 
-  smil_url = GetSMIL(url) + SMIL_DETAILS
-  sig = sign_url(smil_url)
-  smil_url = '%s&sig=%s' % (smil_url, sig)
+  smil_url = GetSMIL(url)
+  signature = HTTP.Request(SIGNATURE_URL % String.Quote(smil_url)).content
+  smil_url = '%s%s&sig=%s' %(smil_url, SMIL_DETAILS, signature)
 
   smil = XML.ElementFromURL(smil_url)
   index = RESOLUTIONS.index(res)
