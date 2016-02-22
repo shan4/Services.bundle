@@ -1,7 +1,8 @@
 NAMESPACES = {"media":"http://search.yahoo.com/mrss/"}
-MRSS_URL = "http://www.logotv.com/player/includes/rss.jhtml?uri=%s"
+MRSS_URL = "http://www.logotv.com/feeds/mrss?uri=%s"
+MRSS_URL2 = "http://www.logotv.com/player/includes/rss.jhtml?uri=%s"
 
-URI_FORMAT = 'mgid:uma:videolist:mtv.com:%s'
+URI_FORMAT = 'mgid:uma:videolist:logotv.com:%s'
 
 RE_RES_BIT = Regex('x(\d+)_(\d+)_?[^._]*\.(mp4|flv)')
 
@@ -145,18 +146,21 @@ def MediaObjectsForURL(url):
 # Get the uri and produce the RSS xml page 
 def GetRSS(url):
 
-    # There is no longer any way to know whether a video clip is part of a playlist code
-    # So we make all of them a videolist uri
+    html = HTML.ElementFromURL(url)
     if 'id=' in url:
         mgid_num = url.split('id=')[1]
         # if there is a playlist id, build a videolist type uri
-        uri = URI_FORMAT %mgid_num
+        uri = URI_FORMAT %mgid_num 
+        rss_url = MRSS_URL2 % uri
     else:
-        html = HTML.ElementFromURL(url)
-        # Pull the uri from the web page
-        uri = html.xpath('//link[@rel="video_src"]/@href')[0].split('/')[-1]
+        # Pull the uri from the web page and use the feed mrss url
+        try:
+            html = HTML.ElementFromURL(url)
+            uri = html.xpath('//div[@class="video_player"]/@data-mgid')[0]
+            rss_url = MRSS_URL % uri
+        except: raise Ex.MediaNotAvailable
 
-    xml = XML.ElementFromURL(MRSS_URL % uri)
+    xml = XML.ElementFromURL(rss_url)
 
     if len(xml.xpath('//media:content[@medium="video"]', namespaces=NAMESPACES)) < 1:
         raise Ex.MediaNotAvailable
