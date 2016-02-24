@@ -18,8 +18,7 @@ def MetadataObjectForURL(url):
 	try:
 		html = HTML.ElementFromURL(url, headers=HEADERS, cacheTime=CACHE_1WEEK)
 	except Ex.HTTPError, e:
-		if e.code == 404:
-			raise Ex.MediaNotAvailable
+		raise Ex.MediaNotAvailable
 
 	player_id = GetPlayerId(url)
 
