@@ -1,5 +1,9 @@
 RE_JSON = Regex('\["params",\s*"(.+?)"\]')
-RE_AVAILABLE = Regex('currently unavailable', Regex.IGNORECASE)
+RE_AVAILABLE = Regex('currently unavailable|content isn.+?t available', Regex.IGNORECASE)
+
+HTTP_HEADERS = {
+	'Accept-Language': 'en-us,en'
+}
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -10,7 +14,7 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	try:
-		page_content = HTTP.Request(url).content
+		page_content = HTTP.Request(url, headers=HTTP_HEADERS).content
 	except:
 		raise Ex.MediaNotAvailable
 
@@ -72,7 +76,7 @@ def MediaObjectsForURL(url):
 def PlayVideo(url, res='720', **kwargs):
 
 	try:
-		page_content = HTTP.Request(url).content
+		page_content = HTTP.Request(url, headers=HTTP_HEADERS).content
 	except:
 		raise Ex.MediaNotAvailable
 
