@@ -26,9 +26,11 @@ def MetadataObjectForURL(url):
 	if not player_id:
 		raise Ex.MediaNotAvailable
 
-	title = html.xpath('//meta[@name="og:title"]/@content|//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="name"]/text()')[0]
-	summary = html.xpath('//meta[@name="og:description"]/@content|//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="description"]/text()')[0]
-	if summary.startswith('Geen omschrijving'): summary = None
+	title = html.xpath('//meta[@name="og:title"]/@content|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//span[@itemprop="name"]/text()|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//meta[@itemprop="name"]/@content')[0]
+	summary = html.xpath('//meta[@name="og:description"]/@content|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//span[@itemprop="description"]/text()|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//meta[@itemprop="description"]/@content')[0]
+
+	if summary.startswith('Geen omschrijving'):
+		summary = None
 
 	try:
 		thumb = html.xpath('//meta[@name="og:image"]/@content|//img[@class="background-image"]/@src')[0].split('?')[0].replace('.png', '.jpg')
