@@ -2,10 +2,33 @@ TOKEN_URL = 'http://ida.omroep.nl/npoplayer/i.js'
 STREAM_URL = 'http://ida.omroep.nl/odi/?prid=%s&puboptions=adaptive&adaptive=yes&part=1&token=%s'
 RE_TOKEN = Regex('token = "([^"]+)"')
 
-HEADERS = {
+HTTP_HEADERS = {
 	'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 6_0_1 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A523 Safari/8536.25',
 	'Cookie': 'npo_cc=30'
 }
+
+# Xpath queries for metadata
+XPATH_TITLE = [
+	'//meta[@name="og:title"]/@content',
+	'//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//span[@itemprop="name"]/text()',
+	'//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//meta[@itemprop="name"]/@content'
+]
+
+XPATH_SUMMARY = [
+	'//meta[@name="og:description"]/@content',
+	'//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//span[@itemprop="description"]/text()',
+	'//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//meta[@itemprop="description"]/@content'
+]
+
+XPATH_THUMB = [
+	'//meta[@name="og:image"]/@content',
+	'//img[@class="background-image"]/@src'
+]
+
+XPATH_RELEASE_DATE = [
+	'//meta[@name="og:video:release_date"]/@content',
+	'//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="startDate"]/text()'
+]
 
 ####################################################################################################
 def NormalizeURL(url):
@@ -16,7 +39,7 @@ def NormalizeURL(url):
 def MetadataObjectForURL(url):
 
 	try:
-		html = HTML.ElementFromURL(url, headers=HEADERS, cacheTime=CACHE_1WEEK)
+		html = HTML.ElementFromURL(url, headers=HTTP_HEADERS, cacheTime=CACHE_1WEEK)
 	except Ex.HTTPError, e:
 		raise Ex.MediaNotAvailable
 
@@ -25,19 +48,19 @@ def MetadataObjectForURL(url):
 	if not player_id:
 		raise Ex.MediaNotAvailable
 
-	title = html.xpath('//meta[@name="og:title"]/@content|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//span[@itemprop="name"]/text()|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//meta[@itemprop="name"]/@content')[0]
-	summary = html.xpath('//meta[@name="og:description"]/@content|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//span[@itemprop="description"]/text()|//div[contains(@itemtype, "TVEpisode") or contains(@itemtype, "VideoObject")]//meta[@itemprop="description"]/@content')[0]
+	title = html.xpath('|'.join(XPATH_TITLE))[0]
+	summary = html.xpath('|'.join(XPATH_SUMMARY))[0]
 
 	if summary.startswith('Geen omschrijving'):
 		summary = None
 
 	try:
-		thumb = html.xpath('//meta[@name="og:image"]/@content|//img[@class="background-image"]/@src')[0].split('?')[0].replace('.png', '.jpg')
+		thumb = html.xpath('|'.join(XPATH_THUMB))[0].split('?')[0].replace('.png', '.jpg')
 	except:
 		thumb = ''
 
 	try:
-		release_date = html.xpath('//meta[@name="og:video:release_date"]/@content|//div[contains(@itemtype, "TVEpisode")]//span[@itemprop="startDate"]/text()')[0].split(' ')[0]
+		release_date = html.xpath('|'.join(XPATH_RELEASE_DATE))[0].split(' ')[0]
 		originally_available_at = Datetime.ParseDate(release_date).date()
 	except:
 		originally_available_at = None
@@ -79,7 +102,7 @@ def PlayVideo(url, **kwargs):
 	if not player_id:
 		raise Ex.MediaNotAvailable
 
-	token_data = HTTP.Request(TOKEN_URL, headers=HEADERS, cacheTime=0).content
+	token_data = HTTP.Request(TOKEN_URL, headers=HTTP_HEADERS, cacheTime=0).content
 	token = RE_TOKEN.search(token_data)
 
 	if not token:
@@ -93,9 +116,8 @@ def PlayVideo(url, **kwargs):
 	try:
 		json = JSON.ObjectFromURL(stream, cacheTime=0)
 		stream = json['url']
-	except Ex.HTTPError, e:
-		if e.code == 404:
-			raise Ex.MediaNotAvailable
+	except:
+		raise Ex.MediaNotAvailable
 
 	return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(stream))
 
