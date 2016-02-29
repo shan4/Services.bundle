@@ -1,6 +1,10 @@
 MOVIE_JSON_URL = 'http://movietrailers.apple.com/trailers/%s/%s/data/page.json'
 RE_URL_INFO = Regex('^https?:\/\/(?:movie)?trailers\.apple\.com\/trailers\/([^\/]+)\/([^\/#]+)\/?#?([^\/]+)?$')
 
+HTTP_HEADERS = {
+	'User-Agent': 'AppleCoreMedia/1.0.0.12D78 (Macintosh; U; Intel Mac OS X 10_8_3; en_us)'
+}
+
 ####################################################################################################
 def NormalizeURL(url):
 
@@ -97,7 +101,7 @@ def PlayVideo(url, fmt=None, **kwargs):
 	else:
 		raise Ex.MediaNotAvailable
 
-	return IndirectResponse(VideoClipObject, key=video_url)
+	return IndirectResponse(VideoClipObject, key=video_url, http_headers=HTTP_HEADERS)
 
 ####################################################################################################
 def FindClip(url):
