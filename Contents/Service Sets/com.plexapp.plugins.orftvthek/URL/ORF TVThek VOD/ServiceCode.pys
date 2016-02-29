@@ -9,7 +9,7 @@ def GetJSONData(url):
         raise Ex.MediaNotAvailable
     data = RE_DATA.search(content).group(1)
 
-    if data == '':
+    if data == '' or data == '[]':
         raise Ex.MediaNotAvailable
 
     json_data = JSON.ObjectFromString(data)
@@ -19,7 +19,7 @@ def GetJSONData(url):
 ####################################################################################################
 def MetadataObjectForURL(url):
     json_data = GetJSONData(url)
-    
+
     if url == json_data['values']['episode']['url']:
         # The whole episode was selected
         video_data = json_data['values']['episode']
@@ -45,11 +45,11 @@ def MediaObjectsForURL(url):
 
     parts    = []
     duration = 0
-    
+
     if url == json_data['values']['episode']['url']:
         # The whole episode was selected
         maxPartNo = json_data['values']['episode']['number_of_segments']
-    
+
         for partNo in range(0, maxPartNo): 
             for source in json_data['values']['segments'][partNo]['playlist_item_array']['sources']:
                 if source['protocol'] == 'http' and source['src'].lower().endswith("mp4") and source['quality'] == 'Q6A':
@@ -57,20 +57,20 @@ def MediaObjectsForURL(url):
                         headers = HTTP.Request(source['src']).headers
                     except:
                         raise Ex.MediaGeoblocked
-                    
+
                     try:
                         segmentDuration = int(json_data['values']['segments'][partNo]['duration'])
                         duration        = duration + segmentDuration
                     except:
                         segmentDuration = None
-                        
+
                     parts.append(
                         PartObject(
                             key = source['src'],
                             duration = segmentDuration
                         )
                     )
-        
+
     else:
         # A specific segment in the episode was selected
         for source in json_data['values']['segment']['playlist_item_array']['sources']:
@@ -79,25 +79,25 @@ def MediaObjectsForURL(url):
                     headers = HTTP.Request(source['src']).headers
                 except:
                     raise Ex.MediaGeoblocked
-                
+
                 try:
                     segmentDuration = int(json_data['values']['segment']['duration'])
                 except:
                     segmentDuration = None
-                
+
                 parts.append(
                     PartObject(
                         key = source['src'],
                         duration = segmentDuration
                     )
                 )
-    
+
     if len(parts) < 1:        
         raise Ex.MediaNotAvailable
-    
+
     if duration == 0:
         duration = None
-    
+
     return [
         MediaObject(
             container               = Container.MP4,
